@@ -283,7 +283,7 @@ public void intializeGUI() {
             public void actionPerformed(ActionEvent e) {
                 ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
                 propositionList.repaint();
-                if (locus < dm.getDiscoursePropositions().size()) {
+                if (locus < (dm.getDiscoursePropositions().size() - 1)) {
                     locus++;
                     propositionIDLabel.setText(locus.toString());
             //        DiscourseProposition[] propositions = new DiscourseProposition[locus + 1];
