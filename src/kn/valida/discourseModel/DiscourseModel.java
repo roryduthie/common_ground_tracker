@@ -36,21 +36,24 @@ public class DiscourseModel {
         //Map by Map generate discourse propositions
         for (IATmap map : annotatedDebate)
         {
+           DiscourseProposition dp = null;
             for (Locution l : map.getLocutions())
             {
+                dp = null;
                 //Copy old information to current proposition
                 locutions.add(l);
 
-                String pid = (String) VariableHandler.returnNewVar(VariableHandler.variableType.PROPOSITION);
+
                 List<Node> daugtherNodes = Edge.findRelatedDaugtherContentNode(l,map.getNodes(), map.getEdges(),"Asserting");
-                DiscourseProposition dp = null;
+                //DiscourseProposition dp = null;
                 //First try to find locutions that initialize proposition
 
                 if (!daugtherNodes.isEmpty()) {
 
                     for (Node daugtherNode : daugtherNodes) {
-
+                        dp = null;
                         if (daugtherNode instanceof Proposition) {
+                            String pid = (String) VariableHandler.returnNewVar(VariableHandler.variableType.PROPOSITION);
                             dp = new DiscourseProposition(pid, daugtherNode.getText());
                             Speaker s = isParticipant(l.getSpeaker());
                             if (s == null) {
@@ -96,7 +99,7 @@ public class DiscourseModel {
                             believeHolders.add(s);
                             dp.getBeliefHolder().put(pid, believeHolders);
                             dp.getDeniesBelief().put(pid, new ArrayList<>());
-                            propToDiscProp.put((Proposition) daugtherNode, dp);
+
 
 
                             //}else{
@@ -105,6 +108,13 @@ public class DiscourseModel {
 
 
                         if (dp != null) {
+
+                            try {
+                                propToDiscProp.put((Proposition) daugtherNode, dp);
+                            }catch(Exception e)
+                            {
+                                System.out.println("What is happening here?");
+                            }
 
                             List<Node> motherNodes = Edge.findMother(l, map.getEdges(), "Default Transition");
 
@@ -122,7 +132,16 @@ public class DiscourseModel {
                                 if (!disagreePropositions.isEmpty()) {
                                     for (Node p : disagreePropositions) {
                                         if (p instanceof Proposition) {
-                                            dp.getDeniesBelief().get(propToDiscProp.get(p).getPid()).add(dp.getOriginalSpeaker());
+
+
+                                                if (propToDiscProp.keySet().contains(p)) {
+                                                    dp.getDeniesBelief().get(propToDiscProp.get(p).getPid()).add(dp.getOriginalSpeaker());
+                                                }else
+                                                {
+                                                    System.out.println("Proposition " + p + "has no corresponding element in the discourse model.");
+                                                    System.out.println("Proposition has not been introduced via a locution.");
+                                                }
+
                                         }
                                     }
                                 }
