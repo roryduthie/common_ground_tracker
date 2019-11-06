@@ -1,15 +1,24 @@
 package kn.valida.discourseModel;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DiscourseProposition {
 
     private String pid;
     private Speaker originalSpeaker;
+
+    /*TODO maybe make this one static for all DiscoursePropositions then the map doesn't have to be copied again and
+    again
+    */
     private LinkedHashMap<String,List<Speaker>> beliefHolder = new LinkedHashMap<>();
     private LinkedHashMap<String,List<Speaker>> deniesBelief = new LinkedHashMap<>();
     private String text;
+
+    private List<DiscourseProposition> expressiveContent = new ArrayList<>();
+
 
     @Override
     public String toString() {
@@ -66,6 +75,19 @@ public class DiscourseProposition {
 
     public void setDeniesBelief(LinkedHashMap<String, List<Speaker>> deniesBelief) {
         this.deniesBelief = deniesBelief;
+    }
+
+    public List<DiscourseProposition> getExpressiveContent() {
+        return expressiveContent;
+    }
+
+    public void setExpressiveContent(List<DiscourseProposition> expressiveContent) {
+        this.expressiveContent = expressiveContent;
+    }
+
+    public String writeExpressiveContent()
+    {
+    return expressiveContent.stream().map(n -> n.text).collect(Collectors.joining(", "));
     }
 
 

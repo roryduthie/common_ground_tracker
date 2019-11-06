@@ -14,7 +14,7 @@ public class PropositionRenderer extends DefaultListCellRenderer {
     private Border padBorder = new EmptyBorder(3,3,3,3);
     private Set<String> highlightCommitments = new HashSet<>();
     private Set<String> highlightJointCommitments = new HashSet<>();
-    private Set<String> highlightUnreolved = new HashSet<>();
+    private Set<String> highlightUnresolved = new HashSet<>();
     private Set<String> highlightControversial = new HashSet<>();
 
     public PropositionRenderer()
@@ -30,38 +30,86 @@ public class PropositionRenderer extends DefaultListCellRenderer {
             boolean isSelected,
             boolean cellHasFocus) {
 
+        /*
         Component c = super.getListCellRendererComponent(
                 list,value,index,isSelected,cellHasFocus);
+
+
+
         JLabel l = (JLabel)c;
+        */
+
+
+        JPanel j = new JPanel();
+        j.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+        j.setBackground(Color.white);
+
+        JLabel l = new JLabel();
+
         //Changed to toString() instead of casting so that different objects can be rendered by this
         String f =  ((DiscourseProposition) value).getOriginalSpeaker().getName() + ": " +  ((DiscourseProposition) value).getText();
+        //  "{" + ((DiscourseProposition) value).writeExpressiveContent() + "}";
         l.setText(f);
         l.setIcon(null);
         l.setBorder(padBorder);
+        l.setOpaque(true);
+        l.setBackground(Color.white);
+
+        JLabel m = new JLabel();
+        m.setText(((DiscourseProposition)value).writeExpressiveContent());
+        m.setIcon(null);
+        m.setBorder(padBorder);
+        m.setOpaque(true);
+        m.setBackground(Color.white);
+
+
+        j.add(l);
+        j.add(m);
+
 
         if (isSelected)
         {
-            setBorder(BorderFactory.createLineBorder(Color.blue));
+            j.setBorder(BorderFactory.createLineBorder(Color.blue));
+        }
+
+        if (!((DiscourseProposition)value).getExpressiveContent().isEmpty())
+        {
+            Boolean highlight = false;
+            for (DiscourseProposition p : ((DiscourseProposition) value).getExpressiveContent())
+            {
+                if (highlightJointCommitments.contains(p.getPid()))
+                {
+                    highlight = true;
+                }
+            }
+
+            if (highlight)
+            {
+                m.setBackground(new Color(0,255,0,20));
+            }
+
+
         }
 
         if (highlightCommitments.contains(((DiscourseProposition) value).getPid()))
         {
-            setBackground(new Color(0,0,255,20));
+            l.setBackground(new Color(0,0,255,20));
         }
 
         if (highlightJointCommitments.contains(((DiscourseProposition) value).getPid()))
         {
-            setBackground(new Color(0,255,0,20));
+            l.setBackground(new Color(0,255,0,20));
         }
 
-        if (highlightUnreolved.contains(((DiscourseProposition) value).getPid()))
+        if (highlightUnresolved.contains(((DiscourseProposition) value).getPid()))
         {
-            setBackground(new Color(255,128,0,20));
+            l.setBackground(new Color(255,128,0,20));
         }
 
         if (highlightControversial.contains(((DiscourseProposition) value).getPid()))
         {
-            setBackground(new Color(255,0,0,20));
+            l.setBackground(new Color(255,0,0,20));
         }
 
         /*
@@ -89,14 +137,14 @@ public class PropositionRenderer extends DefaultListCellRenderer {
                 setBackground(new Color(0,255,0,20));
             }
             */
-        return l;
+        return j;
     }
 
 
     public void resetLists(){
         highlightJointCommitments = new HashSet<>();
         highlightCommitments = new HashSet<>();
-        highlightUnreolved = new HashSet<>();
+        highlightUnresolved = new HashSet<>();
         highlightControversial = new HashSet<>();
     }
 
@@ -118,12 +166,12 @@ public class PropositionRenderer extends DefaultListCellRenderer {
         this.highlightJointCommitments = highlightJointCommitments;
     }
 
-    public Set<String> getHighlightUnreolved() {
-        return highlightUnreolved;
+    public Set<String> getHighlightUnresolved() {
+        return highlightUnresolved;
     }
 
-    public void setHighlightUnreolved(Set<String> highlightUnreolved) {
-        this.highlightUnreolved = highlightUnreolved;
+    public void setHighlightUnresolved(Set<String> highlightUnresolved) {
+        this.highlightUnresolved = highlightUnresolved;
     }
 
 

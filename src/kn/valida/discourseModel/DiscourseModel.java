@@ -53,6 +53,7 @@ public class DiscourseModel {
                     for (Node daugtherNode : daugtherNodes) {
                         dp = null;
                         if (daugtherNode instanceof Proposition) {
+                            /*
                             String pid = (String) VariableHandler.returnNewVar(VariableHandler.variableType.PROPOSITION);
                             dp = new DiscourseProposition(pid, daugtherNode.getText());
                             Speaker s = isParticipant(l.getSpeaker());
@@ -62,35 +63,9 @@ public class DiscourseModel {
                                 discourseParticipants.add(s);
                             }
 
+                            //Copies the previous common ground to the current proposition
                             if (!discoursePropositions.isEmpty()) {
-
-                                LinkedHashMap<String, List<Speaker>> currentBeliefs = new LinkedHashMap<>();
-
-                                //copy old information to current locution
-
-                                for (String key : discoursePropositions.getLast().getBeliefHolder().keySet()) {
-                                    List<Speaker> beliefHolders = new ArrayList<>();
-
-                                    for (Speaker speaker : discoursePropositions.getLast().getBeliefHolder().get(key)) {
-                                        beliefHolders.add(speaker);
-                                    }
-                                    currentBeliefs.put(key, beliefHolders);
-
-                                }
-                                dp.setBeliefHolder(currentBeliefs);
-
-                                LinkedHashMap<String, List<Speaker>> currentDenials = new LinkedHashMap<>();
-
-                                for (String key : discoursePropositions.getLast().getDeniesBelief().keySet()) {
-                                    List<Speaker> deniesBelief = new ArrayList<>();
-
-                                    for (Speaker speaker : discoursePropositions.getLast().getDeniesBelief().get(key)) {
-                                        deniesBelief.add(speaker);
-                                    }
-                                    currentDenials.put(key, deniesBelief);
-                                }
-                                dp.setDeniesBelief(currentDenials);
-
+                                updateDiscourseProposition(discoursePropositions,dp);
                             }
 
 
@@ -100,25 +75,48 @@ public class DiscourseModel {
                             dp.getBeliefHolder().put(pid, believeHolders);
                             dp.getDeniesBelief().put(pid, new ArrayList<>());
 
+                             */
 
+                           dp = initializeDP(daugtherNode,l,discoursePropositions);
 
                             //}else{
                             //    dp = new DiscourseProposition(pid, p.getText());
                         }
 
-
                         if (dp != null) {
 
-                            try {
-                                propToDiscProp.put((Proposition) daugtherNode, dp);
-                            }catch(Exception e)
+
+                            //Direct moves (i.e. directly anchored to the locution; aside from assertion)
+
+                            List<Node> conventionalImplicatures = Edge.findRelatedDaugtherContentNode(l,map.getNodes(),
+                                                                    map.getEdges(),"CI Asserting");
+
+                            if (!conventionalImplicatures.isEmpty())
                             {
-                                System.out.println("What is happening here?");
+                                for (Node ci : conventionalImplicatures)
+                                {
+                                    if (ci instanceof Proposition)
+                                    {
+                                      DiscourseProposition expressiveProposition = initializeDP(ci,l,discoursePropositions);
+                                      dp.getExpressiveContent().add(expressiveProposition);
+
+                                      dp.getBeliefHolder().put(expressiveProposition.getPid(),
+                                              expressiveProposition.getBeliefHolder().get(expressiveProposition.getPid()));
+                                      dp.getDeniesBelief().put(expressiveProposition.getPid(),new ArrayList<>());
+
+                                    }
+                                }
+
                             }
 
+
+
+                            //Indirect moves (i.e. via transition)
                             List<Node> motherNodes = Edge.findMother(l, map.getEdges(), "Default Transition");
 
                             for (Node transition : motherNodes) {
+
+
                                 List<Node> agreePropositions = Edge.findRelatedDaugtherContentNode(transition, map.getNodes(), map.getEdges(), "Agreeing");
                                 if (!agreePropositions.isEmpty()) {
                                     for (Node p : agreePropositions) {
@@ -175,6 +173,49 @@ public class DiscourseModel {
         return null;
     }
 
+
+    /*
+                                if (!discoursePropositions.isEmpty()) {
+
+
+
+                            }
+
+
+     */
+
+
+    public void updateDiscourseProposition(LinkedList<DiscourseProposition> discoursePropositions,DiscourseProposition dp)
+    {
+        LinkedHashMap<String, List<Speaker>> currentBeliefs = new LinkedHashMap<>();
+
+        //copy old information to current locution
+
+        for (String key : discoursePropositions.getLast().getBeliefHolder().keySet()) {
+            List<Speaker> beliefHolders = new ArrayList<>();
+
+            for (Speaker speaker : discoursePropositions.getLast().getBeliefHolder().get(key)) {
+                beliefHolders.add(speaker);
+            }
+            currentBeliefs.put(key, beliefHolders);
+
+        }
+        dp.setBeliefHolder(currentBeliefs);
+
+        LinkedHashMap<String, List<Speaker>> currentDenials = new LinkedHashMap<>();
+
+        for (String key : discoursePropositions.getLast().getDeniesBelief().keySet()) {
+            List<Speaker> deniesBelief = new ArrayList<>();
+
+            for (Speaker speaker : discoursePropositions.getLast().getDeniesBelief().get(key)) {
+                deniesBelief.add(speaker);
+            }
+            currentDenials.put(key, deniesBelief);
+        }
+        dp.setDeniesBelief(currentDenials);
+    }
+
+
     public List<IATmap> getAnnotatedDebate() {
         return annotatedDebate;
     }
@@ -198,6 +239,47 @@ public class DiscourseModel {
     public void setDiscourseParticipants(List<Speaker> discourseParticipants) {
         this.discourseParticipants = discourseParticipants;
     }
+
+    /*
+
+
+     */
+
+    public DiscourseProposition initializeDP(Node daugtherNode,Locution l, LinkedList<DiscourseProposition> intermediatePropositionList)
+    {
+        String pid = (String) VariableHandler.returnNewVar(VariableHandler.variableType.PROPOSITION);
+        DiscourseProposition dp = new DiscourseProposition(pid, daugtherNode.getText());
+        Speaker s = isParticipant(l.getSpeaker());
+        if (s == null) {
+            s = new Speaker(l.getSpeaker(),
+                    (String) VariableHandler.returnNewVar(VariableHandler.variableType.SPEAKER));
+            discourseParticipants.add(s);
+        }
+
+        //Copies the previous common ground to the current proposition
+        if (!intermediatePropositionList.isEmpty()) {
+            updateDiscourseProposition(intermediatePropositionList,dp);
+        }
+
+
+        dp.setOriginalSpeaker(s);
+        List<Speaker> believeHolders = new ArrayList<>();
+        believeHolders.add(s);
+        dp.getBeliefHolder().put(pid, believeHolders);
+        dp.getDeniesBelief().put(pid, new ArrayList<>());
+
+        try {
+            propToDiscProp.put((Proposition) daugtherNode, dp);
+        }catch(Exception e)
+        {
+            System.out.println("Failed to align propositions with discourse model");
+        }
+
+        return dp;
+    }
+
+
+
 
 }
 

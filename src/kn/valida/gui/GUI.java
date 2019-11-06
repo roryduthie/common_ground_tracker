@@ -191,7 +191,7 @@ public class GUI {
 
                     dm = new DiscourseModel(maps);
 
-                    intializeGUI();
+                    initializeGUI();
 
                 }
 
@@ -221,7 +221,7 @@ public class GUI {
         this.guiFrame = frame;
         this.propositionIDLabel.setText(locus.toString());
 
-        intializeGUI();
+        initializeGUI();
 
     }
 
@@ -242,7 +242,7 @@ public class GUI {
     }
 
 
-public void intializeGUI() {
+public void initializeGUI() {
     //Rendering of the speaker list
     Speaker[] speakers = new Speaker[dm.getDiscourseParticipants().size()];
     for (int i = 0; i < dm.getDiscourseParticipants().size(); i++) {
@@ -301,9 +301,6 @@ public void intializeGUI() {
                     propositionScrollPane.setViewportView(propositionList);
 */
                     ((DefaultListModel) propositionList.getModel()).addElement(dm.getDiscoursePropositions().get(locus));
-
-
-
 
                 }
 
@@ -383,10 +380,6 @@ public void intializeGUI() {
 
                     }
 
-
-
-
-
                    // speakerList.clearSelection();
 
                     propositionList.repaint();
@@ -419,7 +412,7 @@ public void intializeGUI() {
                         }
                     }
                     if (containsAll) {
-                        ((PropositionRenderer) propositionList.getCellRenderer()).getHighlightUnreolved().add(key);
+                        ((PropositionRenderer) propositionList.getCellRenderer()).getHighlightUnresolved().add(key);
                     }
                 }
                 propositionList.repaint();
