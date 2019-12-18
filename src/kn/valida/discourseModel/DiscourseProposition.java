@@ -28,6 +28,10 @@ public class DiscourseProposition {
                 '}';
     }
 
+
+    public DiscourseProposition()
+    {}
+
     public DiscourseProposition(String pid, String text)
     {
         this.pid = pid;

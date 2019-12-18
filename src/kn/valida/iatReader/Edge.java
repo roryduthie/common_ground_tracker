@@ -54,7 +54,7 @@ public class Edge {
 
         for (Edge e : edges) {
             if (e.getDaugther() instanceof Node && e.getDaugther().getText().equals(relationType)) {
-                if (a.getJsonID().equals(e.getMother().getJsonID())) {
+                if (a.getJsonID().equals(e.getMother().getJsonID()) && !intermediateNodes.contains(e.getDaugther())) {
                     intermediateNodes.add(e.getDaugther());
                 }
             }
@@ -63,7 +63,7 @@ public class Edge {
         for (Node n : intermediateNodes)
         {
             for (Edge e : edges){
-                if (n.getJsonID().equals(e.getMother().getJsonID()))
+                if (n.getJsonID().equals(e.getMother().getJsonID()) && !daugtherContentNode.contains(e.getDaugther()))
                 {
                     daugtherContentNode.add(e.getDaugther());
                 }
@@ -77,15 +77,15 @@ public class Edge {
      * Find daugther node with specific text (For finding functional nodes such as default transition)
      * @param a
      * @param edges
-     * @param text
+     * @param type
      * @return
      */
-    public static List<Node> findDaughter(Node a, List<Edge> edges, String text)
+    public static List<Node> findDaughter(Node a, List<Edge> edges, String type)
     {
         List<Node> nodeList = new ArrayList<>();
 
         for (Edge e : edges) {
-            if (e.getDaugther().getText().equals(text)) {
+            if (e.getDaugther().getType().equals(type)) {
                 if (a.getJsonID().equals(e.getMother().getJsonID())) {
                     nodeList.add(e.getDaugther());
                 }
@@ -94,12 +94,18 @@ public class Edge {
         return nodeList;
     }
 
+
+    //Find direct daughter disregarding of type. E.g. for finding propositions that are conflicted.
+
+
+
     /**
      * Find mother node with specific text (For finding functional nodes such as default transition)
      * @param a
      * @param edges
      * @param text
      * @return
+     * TODO: find Mother based on text vs. find Mother based on type
      */
     public static List<Node> findMother(Node a, List<Edge> edges, String text)
     {

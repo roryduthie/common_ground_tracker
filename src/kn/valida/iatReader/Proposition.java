@@ -6,9 +6,9 @@ public class Proposition extends Node {
 
     public Proposition(String text, Integer id)
     {
+
         this.setText(text);
         this.setType("I");
         this.setJsonID(id);
-
     }
 }

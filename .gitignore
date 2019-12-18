@@ -29,4 +29,5 @@ hs_err_pid*
 .idea
 *.iml
 *.MF
-*.json
+
+

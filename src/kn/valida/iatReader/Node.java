@@ -9,6 +9,15 @@ public class Node {
     private List<String> relatedElements = new ArrayList<>();
     private Integer jsonID;
 
+    /*
+
+    private enum NodeType{
+        LOCUTION,
+        PROPOSITION
+    }
+    */
+
+
     public Node()
     {
         super();

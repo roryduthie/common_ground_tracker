@@ -17,13 +17,19 @@ public class IATmap {
     private List<Locution> locutions;
     private List<Proposition> propositions;
     private List<Edge> edges;
+    private List<String> speakers;
+    public String fileName;
 
-    public IATmap(List<Node> nodes, List<Locution> locutions, List<Proposition> propositions, List<Edge> edges)
+
+    public IATmap(String fileName, List<Node> nodes, List<Locution> locutions, List<Proposition> propositions, List<Edge> edges,
+    List<String> speakers)
     {
+        this.fileName = fileName;
         this.nodes = nodes;
         this.locutions = locutions;
         this.propositions = propositions;
         this.edges = edges;
+        this.speakers = speakers;
     }
 
     /**
@@ -62,13 +68,16 @@ public class IATmap {
         List<Proposition> propositionsInMap = new ArrayList<>();
         List<Node> nodesInMap = new ArrayList<>();
         List<Edge> edgesInMap = new ArrayList<>();
+        List<String> speakers = new ArrayList<>();
 
         //decompose locutions into speaker and text
         Pattern annotaterPattern = Pattern.compile("^.*: .* : .*");
         Pattern textPattern = Pattern.compile("^(.*) : (.*)");
 
         for (JSONObject j : nodes){
-
+            //TODO node feature varies across representations (aifdb vs intern)
+            //aifdb: "nodeID"
+            //intern: "id"
             switch (j.get("type").toString()) {
                 //Type L for locution
                 case "L":
@@ -78,13 +87,21 @@ public class IATmap {
                     } else {
                         Matcher textMatcher = textPattern.matcher(j.get("text").toString());
                         if (textMatcher.find()) {
-                            Locution l = new Locution(textMatcher.group(1), textMatcher.group(2), Integer.parseInt(j.get("id").toString()));
+                            Locution l = new Locution(textMatcher.group(1), textMatcher.group(2), Integer.parseInt(j.get("nodeID").toString()));
                             locutionsInMap.add(l);
+                            //Experiment:
+
+                            speakers.add(l.getSpeaker());
+
                             nodesInMap.add(l);
+
                         }
                         else{
-                            Locution l = new Locution("unknown_speaker",j.get("text").toString(),Integer.parseInt(j.get("id").toString()));
+                            Locution l = new Locution("unknown_speaker",j.get("text").toString(),Integer.parseInt(j.get("nodeID").toString()));
                             locutionsInMap.add(l);
+
+                            speakers.add(l.getSpeaker());
+
                             nodesInMap.add(l);
                         }
                     }
@@ -92,7 +109,7 @@ public class IATmap {
                 //Type I for propositions (?)
                 case "I":
                     String text = j.get("text").toString();
-                    Proposition p = new Proposition(text, Integer.parseInt(j.get("id").toString()));
+                    Proposition p = new Proposition(text, Integer.parseInt(j.get("nodeID").toString()));
                     propositionsInMap.add(p);
                     nodesInMap.add(p);
                     break;
@@ -100,7 +117,7 @@ public class IATmap {
                 default:
                     String text1 = j.get("text").toString();
                     String type = j.get("type").toString();
-                    Integer id = Integer.parseInt(j.get("id").toString());
+                    Integer id = Integer.parseInt(j.get("nodeID").toString());
                     Node n = new Node(type, text1, id);
                     nodesInMap.add(n);
                     break;
@@ -112,10 +129,19 @@ public class IATmap {
 
         for (JSONObject e : edges)
         {
+            /*
+            TODO for testsuite
             JSONObject from = (JSONObject) e.get("from");
-            Integer fromID = Integer.parseInt(from.get("id").toString());
+            Integer fromID = Integer.parseInt(from.get("nodeID").toString());
             JSONObject to = (JSONObject) e.get("to");
-            Integer toID = Integer.parseInt(to.get("id").toString());
+            Integer toID = Integer.parseInt(to.get("nodeID").toString());
+
+             */
+
+            //For aifdb
+
+            Integer fromID = Integer.parseInt(e.get("fromID").toString());
+            Integer toID = Integer.parseInt(e.get("toID").toString());
 
             Node mother = null;
             Node daughter = null;
@@ -149,7 +175,7 @@ public class IATmap {
         }
 
 
-        IATmap map = new IATmap(nodesInMap,locutionsInMap,propositionsInMap,edgesInMap);
+        IATmap map = new IATmap(file.toString(),nodesInMap,locutionsInMap,propositionsInMap,edgesInMap,speakers);
 
 
         return map;
@@ -188,5 +214,13 @@ public class IATmap {
 
     public void setEdges(List<Edge> edges) {
         this.edges = edges;
+    }
+
+    public List<String> getSpeakers() {
+        return speakers;
+    }
+
+    public void setSpeakers(List<String> speakers) {
+        this.speakers = speakers;
     }
 }

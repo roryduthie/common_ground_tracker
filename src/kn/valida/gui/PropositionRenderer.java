@@ -80,14 +80,17 @@ public class PropositionRenderer extends DefaultListCellRenderer {
             {
                 if (highlightJointCommitments.contains(p.getPid()))
                 {
-                    highlight = true;
+                    m.setBackground(new Color(0,255,0,20));
                 }
+
+                if (highlightControversial.contains(p.getPid()))
+                {
+                    m.setBackground(new Color(255,0,0,20));
+                }
+
             }
 
-            if (highlight)
-            {
-                m.setBackground(new Color(0,255,0,20));
-            }
+
 
 
         }
