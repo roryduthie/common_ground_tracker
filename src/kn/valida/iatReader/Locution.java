@@ -5,6 +5,7 @@ public class Locution extends Node {
 
     private String timeStamp;
 
+    //For aifdb
     public Locution(String speaker, String text, Integer id,String timeStamp) {
         this.speaker = speaker;
         this.setText(text);
@@ -13,6 +14,13 @@ public class Locution extends Node {
         this.setTimeStamp(timeStamp);
     }
 
+    //For testsuite
+    public Locution(String speaker, String text, Integer id) {
+        this.speaker = speaker;
+        this.setText(text);
+        this.setType("L");
+        this.setJsonID(id);
+    }
 
     @Override
     public String toString() {

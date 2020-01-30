@@ -7,11 +7,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -91,8 +87,9 @@ public class IATmap {
                     } else {
                         Matcher textMatcher = textPattern.matcher(j.get("text").toString());
                         if (textMatcher.find()) {
-                            Locution l = new Locution(textMatcher.group(1), textMatcher.group(2), Integer.parseInt(j.get("nodeID").toString()),
-                                    j.get("timestamp").toString());
+                            Locution l = new Locution(textMatcher.group(1), textMatcher.group(2), Integer.parseInt(j.get("id").toString()));
+
+                                    //j.get("timestamp").toString());
                             locutionsInMap.add(l);
                             //Experiment:
 
@@ -102,7 +99,7 @@ public class IATmap {
 
                         }
                         else{
-                            Locution l = new Locution("unknown_speaker",j.get("text").toString(),Integer.parseInt(j.get("nodeID").toString()),
+                            Locution l = new Locution("unknown_speaker",j.get("text").toString(),Integer.parseInt(j.get("id").toString()),
                                     j.get("timestamp").toString());
                             locutionsInMap.add(l);
 
@@ -115,7 +112,7 @@ public class IATmap {
                 //Type I for propositions (?)
                 case "I":
                     String text = j.get("text").toString();
-                    Proposition p = new Proposition(text, Integer.parseInt(j.get("nodeID").toString()));
+                    Proposition p = new Proposition(text, Integer.parseInt(j.get("id").toString()));
                     propositionsInMap.add(p);
                     nodesInMap.add(p);
                     break;
@@ -123,7 +120,7 @@ public class IATmap {
                 default:
                     String text1 = j.get("text").toString();
                     String type = j.get("type").toString();
-                    Integer id = Integer.parseInt(j.get("nodeID").toString());
+                    Integer id = Integer.parseInt(j.get("id").toString());
                     Node n = new Node(type, text1, id);
                     nodesInMap.add(n);
                     break;
@@ -135,20 +132,20 @@ public class IATmap {
 
         for (JSONObject e : edges)
         {
-            /*
-            TODO for testsuite
-            JSONObject from = (JSONObject) e.get("from");
-            Integer fromID = Integer.parseInt(from.get("nodeID").toString());
-            JSONObject to = (JSONObject) e.get("to");
-            Integer toID = Integer.parseInt(to.get("nodeID").toString());
 
-             */
+            //TODO for testsuite
+            JSONObject from = (JSONObject) e.get("from");
+            Integer fromID = Integer.parseInt(from.get("id").toString());
+            JSONObject to = (JSONObject) e.get("to");
+            Integer toID = Integer.parseInt(to.get("id").toString());
+
+
 
             //For aifdb
-
+            /*
             Integer fromID = Integer.parseInt(e.get("fromID").toString());
             Integer toID = Integer.parseInt(e.get("toID").toString());
-
+*/
             Node mother = null;
             Node daughter = null;
 
@@ -182,6 +179,7 @@ public class IATmap {
 
         //Sort locutions by timestamp
 
+        /*
         Collections.sort(locutionsInMap, new Comparator<Locution>() {
             @Override
             public int compare(Locution o1, Locution o2) {
@@ -195,6 +193,7 @@ public class IATmap {
                 }
             }
         });
+         */
 
 
         IATmap map = new IATmap(file.toString(),nodesInMap,locutionsInMap,propositionsInMap,edgesInMap,speakers);
