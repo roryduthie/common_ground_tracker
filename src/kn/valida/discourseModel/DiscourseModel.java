@@ -12,7 +12,13 @@ public class DiscourseModel {
     private LinkedList<DiscourseProposition> discoursePropositions;
     private List<Speaker> discourseParticipants = new ArrayList<>();
     private HashMap<Proposition,DiscourseProposition> propToDiscProp = new HashMap();
+    //TODO Prettier way to align discourse model and IAT model?
+    private HashMap<Integer,String> propIDtoDiscPropID = new HashMap();
+    private HashMap<String,DiscourseProposition> dpReferences;
 
+    public DiscourseModel()
+    {
+    }
 
     public DiscourseModel(List<IATmap> annotatedDebate)
     {
@@ -341,7 +347,7 @@ public class DiscourseModel {
     public DiscourseProposition initializeDP(Locution l, LinkedList<DiscourseProposition> intermediatePropositionList)
     {
         String pid = (String) VariableHandler.returnNewVar(VariableHandler.variableType.PROPOSITION);
-        DiscourseProposition dp = new DiscourseProposition(pid,"discourse move(" + l.getText() +")");
+        DiscourseProposition dp = new DiscourseProposition(pid,"discourse_move(" + l.getText() +")");
         Speaker s = isParticipant(l.getSpeaker(),discourseParticipants);
         if (s == null) {
             s = new Speaker(l.getSpeaker(),
@@ -368,11 +374,14 @@ public class DiscourseModel {
             if (!agreePropositions.isEmpty()) {
 
                 for (Node p : agreePropositions) {
+                    if (p instanceof Proposition)
+                    {
                     dp.getBeliefHolder().get(propToDiscProp.get(p).getPid()).add(dp.getOriginalSpeaker());
                     if (dp.getDeniesBelief().get(propToDiscProp.get(p).getPid()).contains(dp.getOriginalSpeaker()))
                     {
                         dp.getDeniesBelief().get(propToDiscProp.get(p).getPid()).remove(dp.getOriginalSpeaker());
                     }
+                }
                 }
             }
         }
@@ -451,6 +460,52 @@ public class DiscourseModel {
         }
 
     }
+
+    public DiscourseModel mergeSpeakers(Speaker a, Speaker b)
+    {
+        DiscourseModel merged = new DiscourseModel();
+
+        String mergedSpeaker = a.getName() + " & " + b.getName();
+        Speaker combined = new Speaker(mergedSpeaker,
+                (String) VariableHandler.returnNewVar(VariableHandler.variableType.SPEAKER));
+
+        List<Speaker> mergedSpeakers = new ArrayList<>();
+
+        for (Speaker s : discourseParticipants)
+        {
+            if (!(s == a && s == b))
+            {
+                mergedSpeakers.add(s);
+            }
+        }
+
+        mergedSpeakers.add(combined);
+
+        List<DiscourseProposition> mergedDiscoursePropositions = new ArrayList<>();
+
+        for (DiscourseProposition p : discoursePropositions)
+        {
+            Map<String,List<Speaker>> newBeliefs = new LinkedHashMap<>();
+            Map<String,List<Speaker>> newDenials = new LinkedHashMap<>();
+
+            for (Map.Entry<String,List<Speaker>> pid : p.getBeliefHolder().entrySet())
+            {
+
+
+            }
+
+            for (Map.Entry<String,List<Speaker>> pid : p.getDeniesBelief().entrySet())
+            {
+
+            }
+        }
+
+
+
+
+        return null;
+    }
+
 }
 
 

@@ -62,12 +62,17 @@ public class GUI {
 
                  String key = ((DiscourseProposition) propositionList.getModel().getElementAt(index0)).getPid();
                  //Adds belief holders of the proposition at the current time in discourse!
-                 for (Speaker s : ((DiscourseProposition) propositionList.getModel().getElementAt(locus)).getBeliefHolder().
-                         get(key))
-                 {
-                     ((SpeakerRenderer) speakerList.getCellRenderer()).getHighlightElements().add(s.getSid());
-                 }
-                 speakerList.repaint();
+
+                try {
+                    for (Speaker s : ((DiscourseProposition) propositionList.getModel().getElementAt(locus)).getBeliefHolder().
+                            get(key)) {
+                        ((SpeakerRenderer) speakerList.getCellRenderer()).getHighlightElements().add(s.getSid());
+                    }
+                    speakerList.repaint();
+                }catch(Exception e)
+                {
+                    System.out.println("This element has no propositional content. If it is a discourse move this is intended.");
+                }
 
              }
          }

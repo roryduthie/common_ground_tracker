@@ -3,11 +3,14 @@ package kn.valida.iatReader;
 public class Locution extends Node {
     private String speaker;
 
-    public Locution(String speaker, String text, Integer id) {
+    private String timeStamp;
+
+    public Locution(String speaker, String text, Integer id,String timeStamp) {
         this.speaker = speaker;
         this.setText(text);
         this.setType("L");
         this.setJsonID(id);
+        this.setTimeStamp(timeStamp);
     }
 
 
@@ -27,5 +30,13 @@ public class Locution extends Node {
 
     public void setSpeaker(String speaker) {
         this.speaker = speaker;
+    }
+
+    public String getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(String timeStamp) {
+        this.timeStamp = timeStamp;
     }
 }

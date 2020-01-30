@@ -7,7 +7,11 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -87,7 +91,8 @@ public class IATmap {
                     } else {
                         Matcher textMatcher = textPattern.matcher(j.get("text").toString());
                         if (textMatcher.find()) {
-                            Locution l = new Locution(textMatcher.group(1), textMatcher.group(2), Integer.parseInt(j.get("nodeID").toString()));
+                            Locution l = new Locution(textMatcher.group(1), textMatcher.group(2), Integer.parseInt(j.get("nodeID").toString()),
+                                    j.get("timestamp").toString());
                             locutionsInMap.add(l);
                             //Experiment:
 
@@ -97,7 +102,8 @@ public class IATmap {
 
                         }
                         else{
-                            Locution l = new Locution("unknown_speaker",j.get("text").toString(),Integer.parseInt(j.get("nodeID").toString()));
+                            Locution l = new Locution("unknown_speaker",j.get("text").toString(),Integer.parseInt(j.get("nodeID").toString()),
+                                    j.get("timestamp").toString());
                             locutionsInMap.add(l);
 
                             speakers.add(l.getSpeaker());
@@ -174,8 +180,25 @@ public class IATmap {
 
         }
 
+        //Sort locutions by timestamp
+
+        Collections.sort(locutionsInMap, new Comparator<Locution>() {
+            @Override
+            public int compare(Locution o1, Locution o2) {
+                try {
+                    DateFormat format = new SimpleDateFormat("MM-dd-yyyy hh:mm:ss");
+                    return format.parse(o1.getTimeStamp()).compareTo(format.parse(o2.getTimeStamp()));
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return 0;
+                }
+            }
+        });
+
 
         IATmap map = new IATmap(file.toString(),nodesInMap,locutionsInMap,propositionsInMap,edgesInMap,speakers);
+
 
 
         return map;
