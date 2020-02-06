@@ -7,11 +7,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -182,6 +178,7 @@ public class IATmap {
 
         //Sort locutions by timestamp
 
+        /*
         Collections.sort(locutionsInMap, new Comparator<Locution>() {
             @Override
             public int compare(Locution o1, Locution o2) {
@@ -195,7 +192,7 @@ public class IATmap {
                 }
             }
         });
-
+        */
 
         IATmap map = new IATmap(file.toString(),nodesInMap,locutionsInMap,propositionsInMap,edgesInMap,speakers);
 

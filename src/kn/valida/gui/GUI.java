@@ -29,6 +29,9 @@ public class GUI {
     private JScrollPane speakerScrollPane;
     private JScrollPane propositionScrollPane;
     private JButton loadIATmapButton;
+    private JButton goBackwardFastButton;
+    private JButton goForwardFastButton;
+    private JButton mergeSpeakersButton;
 
     private DiscourseModel dm;
 
@@ -217,9 +220,7 @@ public class GUI {
     };
 
 
-    public GUI(JFrame frame, DiscourseModel dm)
-    {
-
+    public GUI(JFrame frame, DiscourseModel dm) {
 
 
         this.dm = dm;
@@ -228,6 +229,36 @@ public class GUI {
 
         initializeGUI();
 
+        /*
+           if (goBackwardButton.getActionListeners().length == 0) {
+        goForwardButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
+                propositionList.repaint();
+                if (locus < (dm.getDiscoursePropositions().size() - 1)) {
+                    locus++;
+                    propositionIDLabel.setText(locus.toString());
+            //        DiscourseProposition[] propositions = new DiscourseProposition[locus + 1];
+
+
+
+                    for (int i = 0; i < propositions.length; i++) {
+                        propositions[i] = dm.getDiscoursePropositions().get(i);
+                    }
+
+                    propositionList = new JList(propositions);
+                    propositionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                    propositionList.setCellRenderer(new PropositionRenderer());
+                    propositionList.setSelectionModel(propositionSelection);
+                    propositionScrollPane.setViewportView(propositionList);
+
+        ((DefaultListModel) propositionList.getModel()).addElement(dm.getDiscoursePropositions().get(locus));
+    }
+}
+        });
+                }
+                */
     }
 
     public GUI(JFrame frame)
@@ -282,7 +313,8 @@ public void initializeGUI() {
     //Intialize all the buttons
 
     //Navigating through discourse propositions
-    if (goBackwardButton.getActionListeners().length == 0) {
+
+    if (goForwardButton.getActionListeners().length == 0) {
         goForwardButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -448,6 +480,89 @@ public void initializeGUI() {
 
 
 
+    if (goBackwardFastButton.getActionListeners().length == 0) {
+        goBackwardFastButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
+                propositionList.repaint();
+                if ((locus -10) > 0) {
+
+                    int i = 0;
+                    while (i < 10) {
+                        ((DefaultListModel) propositionList.getModel()).remove(locus - i);
+                        i++;
+                    }
+                    locus = locus - 10;
+                    propositionIDLabel.setText(locus.toString());
+
+                }
+                }
+        });
+    }
+
+if (goForwardFastButton.getActionListeners().length == 0) {
+    goForwardFastButton.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
+            propositionList.repaint();
+            if (locus < (dm.getDiscoursePropositions().size() - 10)) {
+
+                //        DiscourseProposition[] propositions = new DiscourseProposition[locus + 1];
+
+                int i = 1;
+                while (i < 11) {
+                    ((DefaultListModel) propositionList.getModel()).addElement(dm.getDiscoursePropositions().get(locus + i));
+                    i++;
+                }
+                locus = locus + 10;
+                propositionIDLabel.setText(locus.toString());
+
+            } else {
+                ActionEvent event;
+                long when;
+
+                when = System.currentTimeMillis();
+                event = new ActionEvent(goForwardButton, ActionEvent.ACTION_PERFORMED, "Anything", when, 0);
+
+                for (ActionListener listener : goForwardButton.getActionListeners()) {
+                    listener.actionPerformed(event);
+                }
+
+            }
+        }
+    });
+}
+
+if (mergeSpeakersButton.getActionListeners().length == 0) {
+    mergeSpeakersButton.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (speakerList.getSelectedIndices().length  == 2) {
+
+                DiscourseModel dm2 = dm.mergeSpeakers((Speaker) speakerList.getModel().getElementAt(speakerList.getSelectedIndices()[0]),
+                        (Speaker) speakerList.getModel().getElementAt(speakerList.getSelectedIndices()[1]));
+
+                JFrame frame = new JFrame("Main");
+                GUI mainGUI = new GUI(frame,dm2);
+
+                frame.setContentPane(mainGUI.mainPanel);
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                //For some reason this order centers the GUI properly
+                frame.pack();
+                frame.setSize(520,680);
+                frame.setLocationRelativeTo(null);
+                frame.setVisible(true);
+
+            } else
+            {
+                System.out.println("Can only merge two speakers at one time");
+            }
+        }
+    });
+}
 }
 
 

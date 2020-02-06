@@ -1,14 +1,11 @@
 package kn.valida.discourseModel;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-
 public class Speaker {
 
 
     private String sid;
     private String name;
-    private LinkedHashMap<String,List<DiscourseProposition>> commitments;
+ //   private LinkedHashMap<String,List<DiscourseProposition>> commitments;
 
     @Override
     public String toString() {
@@ -37,6 +34,7 @@ public class Speaker {
         this.name = name;
     }
 
+    /*
     public LinkedHashMap<String, List<DiscourseProposition>> getCommitments() {
         return commitments;
     }
@@ -44,5 +42,5 @@ public class Speaker {
     public void setCommitments(LinkedHashMap<String, List<DiscourseProposition>> commitments) {
         this.commitments = commitments;
     }
-
+*/
 }

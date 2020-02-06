@@ -39,6 +39,19 @@ public class DiscourseProposition {
 
         }
 
+    public DiscourseProposition(String pid, String text, Speaker originalSpeaker,
+                                LinkedHashMap<String,List<Speaker>> beliefHolder,
+                                LinkedHashMap<String,List<Speaker>> deniesBelief,
+                                List<DiscourseProposition> expressiveContent)
+    {
+        this.pid = pid;
+        this.text = text;
+        this.originalSpeaker = originalSpeaker;
+        this.beliefHolder = beliefHolder;
+        this.deniesBelief = deniesBelief;
+        this.expressiveContent = expressiveContent;
+    }
+
 
 
     public String getPid() {
