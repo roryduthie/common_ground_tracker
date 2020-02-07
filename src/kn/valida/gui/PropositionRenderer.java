@@ -7,6 +7,7 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 public class PropositionRenderer extends DefaultListCellRenderer {
@@ -16,10 +17,21 @@ public class PropositionRenderer extends DefaultListCellRenderer {
     private Set<String> highlightJointCommitments = new HashSet<>();
     private Set<String> highlightUnresolved = new HashSet<>();
     private Set<String> highlightControversial = new HashSet<>();
+    private String currentPid;
 
-    public PropositionRenderer()
+    private Boolean highlightRel = false;
+    private Boolean highlightCosine = false;
+
+    private Set<String> highlightRelevance = new HashSet<>();
+    private Set<String> highlightCosineSimilarity = new HashSet<>();
+
+
+
+    private LinkedHashMap<String,DiscourseProposition> dpReference = new LinkedHashMap<>();
+
+    public PropositionRenderer(LinkedHashMap<String,DiscourseProposition> dpReference)
     {
-
+        this.dpReference = dpReference;
     }
 
     @Override
@@ -88,6 +100,27 @@ public class PropositionRenderer extends DefaultListCellRenderer {
                     m.setBackground(new Color(255,0,0,20));
                 }
 
+                if (!(currentPid == null))
+                {
+                    if (highlightRel) {
+
+                        if (highlightRelevance.contains(((DiscourseProposition) value).getPid())) {
+                            Integer opacity = (int) Math.round(dpReference.get(currentPid).getRelevance().
+                                    get(((DiscourseProposition) value).getPid()) * 100);
+                            l.setBackground(new Color(0, 0, 255, opacity));
+                        }
+                    }
+                    if (highlightCosine) {
+                        if (highlightCosineSimilarity.contains(((DiscourseProposition) value).getPid())) {
+                            Integer opacity = (int) Math.round(dpReference.get(currentPid).getSemanticSimilarity().
+                                    get(((DiscourseProposition) value).getPid()) * 100);
+                            l.setBackground(new Color(255, 0, 0, opacity));
+                        }
+                    }
+
+                }
+
+
             }
 
 
@@ -113,6 +146,35 @@ public class PropositionRenderer extends DefaultListCellRenderer {
         if (highlightControversial.contains(((DiscourseProposition) value).getPid()))
         {
             l.setBackground(new Color(255,0,0,20));
+        }
+
+
+        /*
+        if (!(currentPid == null)) {
+            for (String pid : dpReference.get(currentPid).getRelevance().keySet()) {
+                Integer opacity = (int) Math.round(dpReference.get(currentPid).getRelevance().get(pid) * 100);
+
+                l.setBackground(new Color(255, 0, 0, opacity));
+            }
+        }
+*/
+        if (!(currentPid == null)) {
+
+            if (highlightRel) {
+                if (highlightRelevance.contains(((DiscourseProposition) value).getPid())) {
+                    Integer opacity = (int) Math.round(dpReference.get(currentPid).getRelevance().
+                            get(((DiscourseProposition) value).getPid()) * 100);
+                    l.setBackground(new Color(0, 0, 255, opacity));
+                }
+            }
+
+            if (highlightCosine) {
+                if (highlightCosineSimilarity.contains(((DiscourseProposition) value).getPid())) {
+                    Integer opacity = (int) Math.round(dpReference.get(currentPid).getSemanticSimilarity().
+                            get(((DiscourseProposition) value).getPid()) * 100);
+                    l.setBackground(new Color(255, 0, 0, opacity));
+                }
+            }
         }
 
         /*
@@ -149,6 +211,11 @@ public class PropositionRenderer extends DefaultListCellRenderer {
         highlightCommitments = new HashSet<>();
         highlightUnresolved = new HashSet<>();
         highlightControversial = new HashSet<>();
+        highlightRelevance = new HashSet<>();
+        highlightCosineSimilarity = new HashSet<>();
+        currentPid = null;
+        highlightCosine = false;
+        highlightRel = false;
     }
 
 
@@ -184,6 +251,46 @@ public class PropositionRenderer extends DefaultListCellRenderer {
 
     public void setHighlightControversial(Set<String> highlightControversial) {
         this.highlightControversial = highlightControversial;
+    }
+
+    public String getCurrentPid() {
+        return currentPid;
+    }
+
+    public void setCurrentPid(String currentPid) {
+        this.currentPid = currentPid;
+    }
+
+    public Set<String> getHighlightRelevance() {
+        return highlightRelevance;
+    }
+
+    public void setHighlightRelevance(Set<String> highlightRelevance) {
+        this.highlightRelevance = highlightRelevance;
+    }
+
+    public Set<String> getHighlightCosineSimilarity() {
+        return highlightCosineSimilarity;
+    }
+
+    public void setHighlightCosineSimilarity(Set<String> highlightCosineSimilarity) {
+        this.highlightCosineSimilarity = highlightCosineSimilarity;
+    }
+
+    public Boolean getHighlightRel() {
+        return highlightRel;
+    }
+
+    public void setHighlightRel(Boolean highlightRel) {
+        this.highlightRel = highlightRel;
+    }
+
+    public Boolean getHighlightCosine() {
+        return highlightCosine;
+    }
+
+    public void setHighlightCosine(Boolean highlightCosine) {
+        this.highlightCosine = highlightCosine;
     }
 
 

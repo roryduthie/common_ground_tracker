@@ -32,6 +32,8 @@ public class GUI {
     private JButton goBackwardFastButton;
     private JButton goForwardFastButton;
     private JButton mergeSpeakersButton;
+    private JButton showRelevanceButton;
+    private JButton cosineSimilarityButton;
 
     private DiscourseModel dm;
 
@@ -259,6 +261,7 @@ public class GUI {
         });
                 }
                 */
+
     }
 
     public GUI(JFrame frame)
@@ -303,7 +306,7 @@ public void initializeGUI() {
 
     propositionList = new JList(propListModel);
     propositionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-    propositionList.setCellRenderer(new PropositionRenderer());
+    propositionList.setCellRenderer(new PropositionRenderer(dm.getDpReference()));
     propositionList.setSelectionModel(propositionSelection);
 
 
@@ -374,6 +377,62 @@ public void initializeGUI() {
                     propositionList.setSelectionModel(propositionSelection);
                     propositionScrollPane.setViewportView(propositionList);
 */
+
+                }
+            }
+        });
+    }
+
+    if (goBackwardFastButton.getActionListeners().length == 0) {
+        goBackwardFastButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
+                propositionList.repaint();
+                if ((locus -10) > 0) {
+
+                    int i = 0;
+                    while (i < 10) {
+                        ((DefaultListModel) propositionList.getModel()).remove(locus - i);
+                        i++;
+                    }
+                    locus = locus - 10;
+                    propositionIDLabel.setText(locus.toString());
+
+                }
+            }
+        });
+    }
+
+    if (goForwardFastButton.getActionListeners().length == 0) {
+        goForwardFastButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
+                propositionList.repaint();
+                if (locus < (dm.getDiscoursePropositions().size() - 10)) {
+
+                    //        DiscourseProposition[] propositions = new DiscourseProposition[locus + 1];
+
+                    int i = 1;
+                    while (i < 11) {
+                        ((DefaultListModel) propositionList.getModel()).addElement(dm.getDiscoursePropositions().get(locus + i));
+                        i++;
+                    }
+                    locus = locus + 10;
+                    propositionIDLabel.setText(locus.toString());
+
+                } else {
+                    ActionEvent event;
+                    long when;
+
+                    when = System.currentTimeMillis();
+                    event = new ActionEvent(goForwardButton, ActionEvent.ACTION_PERFORMED, "Anything", when, 0);
+
+                    for (ActionListener listener : goForwardButton.getActionListeners()) {
+                        listener.actionPerformed(event);
+                    }
 
                 }
             }
@@ -478,63 +537,54 @@ public void initializeGUI() {
         });
     }
 
-
-
-    if (goBackwardFastButton.getActionListeners().length == 0) {
-        goBackwardFastButton.addActionListener(new ActionListener() {
+    if (cosineSimilarityButton.getActionListeners().length ==0) {
+        cosineSimilarityButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
                 ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
                 propositionList.repaint();
-                if ((locus -10) > 0) {
 
-                    int i = 0;
-                    while (i < 10) {
-                        ((DefaultListModel) propositionList.getModel()).remove(locus - i);
-                        i++;
-                    }
-                    locus = locus - 10;
-                    propositionIDLabel.setText(locus.toString());
+                DiscourseProposition current = (DiscourseProposition) propositionList.getModel().getElementAt(locus);
 
-                }
-                }
-        });
-    }
+                ((PropositionRenderer) propositionList.getCellRenderer()).setHighlightCosine(true);
 
-if (goForwardFastButton.getActionListeners().length == 0) {
-    goForwardFastButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
-            propositionList.repaint();
-            if (locus < (dm.getDiscoursePropositions().size() - 10)) {
+                ((PropositionRenderer) propositionList.getCellRenderer()).setCurrentPid(
+                        (current.getPid()));
 
-                //        DiscourseProposition[] propositions = new DiscourseProposition[locus + 1];
-
-                int i = 1;
-                while (i < 11) {
-                    ((DefaultListModel) propositionList.getModel()).addElement(dm.getDiscoursePropositions().get(locus + i));
-                    i++;
-                }
-                locus = locus + 10;
-                propositionIDLabel.setText(locus.toString());
-
-            } else {
-                ActionEvent event;
-                long when;
-
-                when = System.currentTimeMillis();
-                event = new ActionEvent(goForwardButton, ActionEvent.ACTION_PERFORMED, "Anything", when, 0);
-
-                for (ActionListener listener : goForwardButton.getActionListeners()) {
-                    listener.actionPerformed(event);
+                for (String key : current.getSemanticSimilarity().keySet()) {
+                    ((PropositionRenderer) propositionList.getCellRenderer()).getHighlightCosineSimilarity().add(key);
                 }
 
             }
-        }
-    });
-}
+        });
+    }
+
+
+    if (showRelevanceButton.getActionListeners().length == 0) {
+        showRelevanceButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
+                propositionList.repaint();
+
+                DiscourseProposition current = (DiscourseProposition) propositionList.getModel().getElementAt(locus);
+
+                ((PropositionRenderer) propositionList.getCellRenderer()).setHighlightRel(true);
+
+                ((PropositionRenderer) propositionList.getCellRenderer()).setCurrentPid(
+                        (current.getPid()));
+
+                for (String key : current.getRelevance().keySet()) {
+                    ((PropositionRenderer) propositionList.getCellRenderer()).getHighlightRelevance().add(key);
+                }
+            }
+        });
+
+    }
+
+
+
+
 
 if (mergeSpeakersButton.getActionListeners().length == 0) {
     mergeSpeakersButton.addActionListener(new ActionListener() {

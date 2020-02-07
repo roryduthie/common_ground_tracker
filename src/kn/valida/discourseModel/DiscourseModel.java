@@ -1,5 +1,6 @@
 package kn.valida.discourseModel;
 
+import com.robrua.nlp.bert.Bert;
 import kn.valida.iatReader.*;
 import kn.valida.utilities.VariableHandler;
 
@@ -14,7 +15,10 @@ public class DiscourseModel {
     private HashMap<Proposition,DiscourseProposition> propToDiscProp = new HashMap();
     //TODO Prettier way to align discourse model and IAT model?
     private HashMap<Integer,String> propIDtoDiscPropID = new HashMap();
-    private HashMap<String,DiscourseProposition> dpReferences;
+
+    private LinkedHashMap<String,DiscourseProposition> dpReference = new LinkedHashMap<>();
+
+    private Bert bert = Bert.load("com/robrua/nlp/easy-bert/bert-cased-L-12-H-768-A-12");
 
     public DiscourseModel()
     {
@@ -193,6 +197,20 @@ public class DiscourseModel {
                 }
 
 
+        /*
+        for (DiscourseProposition dp : discoursePropositions)
+        {
+            dpReference.put(dp.getPid(),dp);
+            if (!dp.getExpressiveContent().isEmpty())
+            {
+                for (DiscourseProposition dp1 : dp.getExpressiveContent())
+                {
+                    dpReference.put(dp1.getPid(),dp1);
+                }
+            }
+        }
+        */
+
         return discoursePropositions;
 
     }
@@ -223,8 +241,7 @@ public class DiscourseModel {
     {
         LinkedHashMap<String, List<Speaker>> currentBeliefs = new LinkedHashMap<>();
 
-        //copy old information to current locution
-
+        //copy old beliefholder and denier information to current locution
         try {
             for (String key : discoursePropositions.getLast().getBeliefHolder().keySet()) {
                 List<Speaker> beliefHolders = new ArrayList<>();
@@ -249,35 +266,54 @@ public class DiscourseModel {
             }
 
             dp.setDeniesBelief(currentDenials);
+
         } catch(Exception e)
         {
             System.out.println("Couldn't copy beliefholders to new proposition.");
         }
-    }
+
+        //Update relevance based on distance
+
+        LinkedHashMap<String,Double> currentRelevance = new LinkedHashMap<>();
+
+        try{
+            for (String key : discoursePropositions.getLast().getRelevance().keySet())
+            {
+                currentRelevance.put(key,discoursePropositions.getLast().getRelevance().get(key) * 0.95);
+            }
+
+            dp.setRelevance(currentRelevance);
+
+        }catch(Exception e)
+        {
+            System.out.println("Couldn't update relevance for previous propositions");
+        }
+
+        //Calculate semantic similarity
+
+        //try(Bert bert = Bert.load("com/robrua/nlp/easy-bert/bert-uncased-L-12-H-768-A-12"))
+         try  {
+            float[] embedding = dp.getEmbedding();
+
+            for (String key : dpReference.keySet())
+            {
+                if (!key.equals(dp.getPid()))
+                {
+                  float[]  embedding2 = dpReference.get(key).getEmbedding();
+
+                  Double cosineSimilarity = cosineSimilarity(embedding,embedding2);
+                  dp.getSemanticSimilarity().put(key,cosineSimilarity);
+                }
+            }
 
 
-    public List<IATmap> getAnnotatedDebate() {
-        return annotatedDebate;
-    }
 
-    public void setAnnotatedDebate(List<IATmap> annotatedDebate) {
-        this.annotatedDebate = annotatedDebate;
-    }
+        }catch(Exception e)
+        {
+            System.out.println("Failed to load BERT moodel");
+        }
 
-    public LinkedList<DiscourseProposition> getDiscoursePropositions() {
-        return discoursePropositions;
-    }
 
-    public void setDiscoursePropositions(LinkedList<DiscourseProposition> discoursePropositions) {
-        this.discoursePropositions = discoursePropositions;
-    }
-
-    public List<Speaker> getDiscourseParticipants() {
-        return discourseParticipants;
-    }
-
-    public void setDiscourseParticipants(List<Speaker> discourseParticipants) {
-        this.discourseParticipants = discourseParticipants;
     }
 
     /*
@@ -288,7 +324,10 @@ public class DiscourseModel {
     public DiscourseProposition initializeDP(Node daugtherNode,Locution l, LinkedList<DiscourseProposition> intermediatePropositionList)
     {
         String pid = (String) VariableHandler.returnNewVar(VariableHandler.variableType.PROPOSITION);
-        DiscourseProposition dp = new DiscourseProposition(pid, daugtherNode.getText());
+        float[] embedding = bert.embedSequence(daugtherNode.getText());
+        DiscourseProposition dp = new DiscourseProposition(pid, daugtherNode.getText(),embedding);
+        dpReference.put(pid,dp);
+
         Speaker s = isParticipant(l.getSpeaker(),discourseParticipants);
 
         //TODO this is sort of a hack?
@@ -310,6 +349,9 @@ public class DiscourseModel {
         dp.getBeliefHolder().put(pid, believeHolders);
         dp.getDeniesBelief().put(pid, new ArrayList<>());
 
+        //Set relevance
+        dp.getRelevance().put(pid,1.0);
+
         try {
             propToDiscProp.put((Proposition) daugtherNode, dp);
         }catch(Exception e)
@@ -324,19 +366,42 @@ public class DiscourseModel {
     public DiscourseProposition initializeDP(Locution l, LinkedList<DiscourseProposition> intermediatePropositionList)
     {
         String pid = (String) VariableHandler.returnNewVar(VariableHandler.variableType.PROPOSITION);
-        DiscourseProposition dp = new DiscourseProposition(pid,"discourse_move(" + l.getText() +")");
+        float[] embedding = bert.embedSequence(l.getText());
+        DiscourseProposition dp = new DiscourseProposition(pid,"discourse_move(" + l.getText() +")",embedding);
+        dpReference.put(pid,dp);
         Speaker s = isParticipant(l.getSpeaker(),discourseParticipants);
         if (s == null) {
             s = new Speaker(l.getSpeaker(),
                     (String) VariableHandler.returnNewVar(VariableHandler.variableType.SPEAKER));
             discourseParticipants.add(s);
         }
+        dp.setOriginalSpeaker(s);
+
+
 
         //Copies the previous common ground to the current proposition
         if (!intermediatePropositionList.isEmpty()) {
             updateDiscourseProposition(intermediatePropositionList,dp);
         }
-        dp.setOriginalSpeaker(s);
+
+
+        //Set beliefholders
+        if (!dp.getBeliefHolder().keySet().contains(pid))
+        {
+            dp.getBeliefHolder().put(pid,new ArrayList<>());
+        }
+        dp.getBeliefHolder().get(pid).add(s);
+
+        //Set speaker who deny belief
+        if (!dp.getDeniesBelief().keySet().contains(pid))
+        {
+            dp.getDeniesBelief().put(pid,new ArrayList<>());
+        }
+
+        //Set relevance
+        dp.getRelevance().put(pid,1.0);
+
+
         return dp;
     }
 
@@ -365,6 +430,11 @@ public class DiscourseModel {
                 }
                 bh.get(p.getPid()).add(s);
             }
+
+            if (!currentProposition.getRelevance().containsKey(newID))
+            {
+             currentProposition.getRelevance().put(newID,1.0);
+            }
         }
         catch (Exception e) {
             System.out.println("Failed to add proposition " + p.toString());
@@ -386,6 +456,11 @@ public class DiscourseModel {
                     if (p instanceof Proposition)
                     {
                     dp.getBeliefHolder().get(propToDiscProp.get(p).getPid()).add(dp.getOriginalSpeaker());
+
+                    //Make relevant again if it is used in IAT argumentation scheme
+                    dp.getRelevance().replace(propToDiscProp.get(p).getPid(),1.0);
+
+                    //TODO do we want to avoid inconsistency (i.e. contradicting beliefs?)
                     if (dp.getDeniesBelief().get(propToDiscProp.get(p).getPid()).contains(dp.getOriginalSpeaker()))
                     {
                         dp.getDeniesBelief().get(propToDiscProp.get(p).getPid()).remove(dp.getOriginalSpeaker());
@@ -425,6 +500,10 @@ public class DiscourseModel {
                                 } else {
                                     dp.getDeniesBelief().get(propToDiscProp.get((q)).getPid()).add(dp.getOriginalSpeaker());
                                 }
+
+                                //Make relevant again if it is used in IAT argumentation scheme
+                                dp.getRelevance().replace(propToDiscProp.get(q).getPid(),1.0);
+
                             } else {
                                 System.out.println("Proposition " + p + "has no corresponding element in the discourse model.");
                                 System.out.println("Proposition has not been introduced via a locution.");
@@ -437,6 +516,7 @@ public class DiscourseModel {
         }
     }
 
+    //TODO Do the same thing for mother nodes
     public void argueMove(List<Node> transitionNodes,IATmap map, DiscourseProposition dp)
     {
         for (Node transition : transitionNodes)
@@ -452,12 +532,22 @@ public class DiscourseModel {
                     {
                         if (q instanceof Proposition)
                         {
+
+                            //Basically only apply this to propositions that have already been uttered at this point
                             if (propToDiscProp.keySet().contains(q))
                             {
-                                //Retract commitment if it is in conflict with previous agreement
-                                if (!dp.getOriginalSpeaker().equals(propToDiscProp.get(q).getOriginalSpeaker())) {
+                                //If the premise of the argue move is a denial of self or a belief of some other party
+
+                                if (!dp.getOriginalSpeaker().equals(propToDiscProp.get(q).getOriginalSpeaker()) ||
+                                        !dp.getBeliefHolder().get(propToDiscProp.get(q).getPid()).contains(dp.getOriginalSpeaker())) {
                                     dp.getBeliefHolder().get(propToDiscProp.get((q)).getPid()).add(dp.getOriginalSpeaker());
                                 }
+
+
+
+                                //Make relevant again if it is used in IAT argumentation scheme
+                                dp.getRelevance().replace(propToDiscProp.get(q).getPid(),1.0);
+
 
                             }
                         }
@@ -554,7 +644,7 @@ public class DiscourseModel {
             }
 
             DiscourseProposition mergedProposition = new DiscourseProposition(p.getPid(),p.getText(),mergedOriginalSpeaker,
-                    newBeliefs,newDenials,p.getExpressiveContent());
+                    newBeliefs,newDenials,p.getExpressiveContent(),p.getEmbedding());
 
 
             mergedProposition.setExpressiveContent(mergeSpeakers2(p.getExpressiveContent(),pstodps,a,b,combined));
@@ -611,6 +701,62 @@ public class DiscourseModel {
 
         return mergedDiscourseModel;
     }
+
+
+    public LinkedHashMap<String, DiscourseProposition> getDpReference() {
+        return dpReference;
+    }
+
+    public void setDpReference(LinkedHashMap<String, DiscourseProposition> dpReference) {
+        this.dpReference = dpReference;
+    }
+
+
+    public static double cosineSimilarity(float[] vectorA, float[] vectorB) {
+
+        if (vectorA.length == vectorB.length) {
+            double dotProduct = 0.0;
+            double normA = 0.0;
+            double normB = 0.0;
+            for (int i = 0; i < vectorA.length; i++) {
+                dotProduct += vectorA[i] * vectorB[i];
+                normA += Math.pow(vectorA[i], 2);
+                normB += Math.pow(vectorB[i], 2);
+            }
+            return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+        }
+        else
+        {
+            System.out.println("Unable to calculate cosine similarity");
+            return 1;
+        }
+    }
+
+
+    public List<IATmap> getAnnotatedDebate() {
+        return annotatedDebate;
+    }
+
+    public void setAnnotatedDebate(List<IATmap> annotatedDebate) {
+        this.annotatedDebate = annotatedDebate;
+    }
+
+    public LinkedList<DiscourseProposition> getDiscoursePropositions() {
+        return discoursePropositions;
+    }
+
+    public void setDiscoursePropositions(LinkedList<DiscourseProposition> discoursePropositions) {
+        this.discoursePropositions = discoursePropositions;
+    }
+
+    public List<Speaker> getDiscourseParticipants() {
+        return discourseParticipants;
+    }
+
+    public void setDiscourseParticipants(List<Speaker> discourseParticipants) {
+        this.discourseParticipants = discourseParticipants;
+    }
+
 
 }
 

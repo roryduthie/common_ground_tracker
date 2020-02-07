@@ -17,7 +17,14 @@ public class DiscourseProposition {
     private LinkedHashMap<String,List<Speaker>> deniesBelief = new LinkedHashMap<>();
     private String text;
 
+    private LinkedHashMap<String,Double> relevance = new LinkedHashMap<>();
+
+    private LinkedHashMap<String,Double> semanticSimilarity = new LinkedHashMap<>();
+
+    private float[] embedding;
+
     private List<DiscourseProposition> expressiveContent = new ArrayList<>();
+
 
 
     @Override
@@ -32,17 +39,19 @@ public class DiscourseProposition {
     public DiscourseProposition()
     {}
 
-    public DiscourseProposition(String pid, String text)
+    public DiscourseProposition(String pid, String text, float[] embedding)
     {
         this.pid = pid;
         this.text = text;
+        this.embedding = embedding;
 
         }
 
     public DiscourseProposition(String pid, String text, Speaker originalSpeaker,
                                 LinkedHashMap<String,List<Speaker>> beliefHolder,
                                 LinkedHashMap<String,List<Speaker>> deniesBelief,
-                                List<DiscourseProposition> expressiveContent)
+                                List<DiscourseProposition> expressiveContent,
+                                float[] embedding)
     {
         this.pid = pid;
         this.text = text;
@@ -50,6 +59,7 @@ public class DiscourseProposition {
         this.beliefHolder = beliefHolder;
         this.deniesBelief = deniesBelief;
         this.expressiveContent = expressiveContent;
+        this.embedding = embedding;
     }
 
 
@@ -107,5 +117,28 @@ public class DiscourseProposition {
     return expressiveContent.stream().map(n -> n.text).collect(Collectors.joining(", "));
     }
 
+    public LinkedHashMap<String, Double> getRelevance() {
+        return relevance;
+    }
+
+    public void setRelevance(LinkedHashMap<String, Double> relevance) {
+        this.relevance = relevance;
+    }
+
+    public LinkedHashMap<String, Double> getSemanticSimilarity() {
+        return semanticSimilarity;
+    }
+
+    public void setSemanticSimilarity(LinkedHashMap<String, Double> semanticSimilarity) {
+        this.semanticSimilarity = semanticSimilarity;
+    }
+
+    public float[] getEmbedding() {
+        return embedding;
+    }
+
+    public void setEmbedding(float[] embedding) {
+        this.embedding = embedding;
+    }
 
 }
