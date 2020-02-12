@@ -104,17 +104,17 @@ public class PropositionRenderer extends DefaultListCellRenderer {
                 {
                     if (highlightRel) {
 
-                        if (highlightRelevance.contains(((DiscourseProposition) value).getPid())) {
+                        if (highlightRelevance.contains(p.getPid())) {
                             Integer opacity = (int) Math.round(dpReference.get(currentPid).getRelevance().
-                                    get(((DiscourseProposition) value).getPid()) * 100);
-                            l.setBackground(new Color(0, 0, 255, opacity));
+                                    get(p.getPid()) * 100);
+                            m.setBackground(new Color(0, 0, 255, opacity));
                         }
                     }
                     if (highlightCosine) {
-                        if (highlightCosineSimilarity.contains(((DiscourseProposition) value).getPid())) {
+                        if (highlightCosineSimilarity.contains(p.getPid())) {
                             Integer opacity = (int) Math.round(dpReference.get(currentPid).getSemanticSimilarity().
-                                    get(((DiscourseProposition) value).getPid()) * 100);
-                            l.setBackground(new Color(255, 0, 0, opacity));
+                                    get(p.getPid()) * 100);
+                            m.setBackground(new Color(255, 0, 0, opacity));
                         }
                     }
 

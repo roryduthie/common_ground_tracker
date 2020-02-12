@@ -16,15 +16,18 @@ public class DiscourseProposition {
     private LinkedHashMap<String,List<Speaker>> beliefHolder = new LinkedHashMap<>();
     private LinkedHashMap<String,List<Speaker>> deniesBelief = new LinkedHashMap<>();
     private String text;
+    private List<DiscourseProposition> expressiveContent = new ArrayList<>();
 
+
+    //Experimental
     private LinkedHashMap<String,Double> relevance = new LinkedHashMap<>();
 
     private LinkedHashMap<String,Double> semanticSimilarity = new LinkedHashMap<>();
-
     private float[] embedding;
 
-    private List<DiscourseProposition> expressiveContent = new ArrayList<>();
-
+    //Even more experimental
+    private LinkedHashMap<String,List<Commitment>> positiveCommitments = new LinkedHashMap<>();
+    private LinkedHashMap<String,List<Commitment>> negativeCommitments  = new LinkedHashMap<>();
 
 
     @Override
@@ -63,6 +66,13 @@ public class DiscourseProposition {
     }
 
 
+    public String writeExpressiveContent()
+    {
+        return expressiveContent.stream().map(n -> n.text).collect(Collectors.joining(", "));
+    }
+
+
+    //Getter and Setter
 
     public String getPid() {
         return pid;
@@ -112,11 +122,6 @@ public class DiscourseProposition {
         this.expressiveContent = expressiveContent;
     }
 
-    public String writeExpressiveContent()
-    {
-    return expressiveContent.stream().map(n -> n.text).collect(Collectors.joining(", "));
-    }
-
     public LinkedHashMap<String, Double> getRelevance() {
         return relevance;
     }
@@ -139,6 +144,22 @@ public class DiscourseProposition {
 
     public void setEmbedding(float[] embedding) {
         this.embedding = embedding;
+    }
+
+    public LinkedHashMap<String, List<Commitment>> getPositiveCommitments() {
+        return positiveCommitments;
+    }
+
+    public void setPositiveCommitments(LinkedHashMap<String, List<Commitment>> positiveCommitments) {
+        this.positiveCommitments = positiveCommitments;
+    }
+
+    public LinkedHashMap<String, List<Commitment>> getNegativeCommitments() {
+        return negativeCommitments;
+    }
+
+    public void setNegativeCommitments(LinkedHashMap<String, List<Commitment>> negativeCommitments) {
+        this.negativeCommitments = negativeCommitments;
     }
 
 }

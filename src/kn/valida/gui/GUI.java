@@ -507,7 +507,7 @@ public void initializeGUI() {
                             break;
                         }
                     }
-                    if (containsAll) {
+                    if (!containsAll) {
                         ((PropositionRenderer) propositionList.getCellRenderer()).getHighlightUnresolved().add(key);
                     }
                 }
