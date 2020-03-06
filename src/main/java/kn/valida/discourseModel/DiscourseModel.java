@@ -260,8 +260,40 @@ public class DiscourseModel {
             System.out.println("Couldn't copy beliefholders to new proposition.");
         }
 
-        //Update relevance based on distance
+        //Update commitments
+        LinkedHashMap<String,List<Commitment>> currentCommitments = new LinkedHashMap<>();
+        try{
+            for (String key : discoursePropositions.getLast().getPositiveCommitments().keySet()) {
+                List<Commitment> commitments = new ArrayList<>();
 
+                for (Commitment c : discoursePropositions.getLast().getPositiveCommitments().get(key)) {
+                    c.setCommitmentRating(c.getCommitmentRating()*0.95);
+                    commitments.add(c);
+                }
+                currentCommitments.put(key,commitments);
+
+            }
+            dp.setPositiveCommitments(currentCommitments);
+
+            LinkedHashMap<String, List<Commitment>> currentNegativeCommitments = new LinkedHashMap<>();
+
+            for (String key : discoursePropositions.getLast().getNegativeCommitments().keySet()) {
+                List<Commitment> negativeCommitments = new ArrayList<>();
+
+                for (Commitment commitment : discoursePropositions.getLast().getNegativeCommitments().get(key)) {
+                    commitment.setCommitmentRating(commitment.getCommitmentRating()*0.95);
+                    negativeCommitments.add(commitment);
+                }
+                currentNegativeCommitments.put(key,negativeCommitments);
+            }
+            dp.setNegativeCommitments(currentNegativeCommitments);
+
+        }catch(Exception e)
+        {
+            System.out.println("Error while updating commitment ratings ");
+        }
+
+        //Update relevance based on distance
         LinkedHashMap<String, Double> currentRelevance = new LinkedHashMap<>();
 
         try {
@@ -328,8 +360,7 @@ public class DiscourseModel {
     }
 
     /*
-
-
+    Intializes an asserted proposition!
      */
 
     public DiscourseProposition initializeDP(Node daugtherNode, Locution l, LinkedList<DiscourseProposition> intermediatePropositionList) {
@@ -357,7 +388,21 @@ public class DiscourseModel {
         List<Speaker> believeHolders = new ArrayList<>();
         believeHolders.add(s);
         dp.getBeliefHolder().put(pid, believeHolders);
-        dp.getDeniesBelief().put(pid, new ArrayList<>());
+
+        if (!dp.getDeniesBelief().containsKey(pid)) {
+            dp.getDeniesBelief().put(pid, new ArrayList<>());
+        }
+
+        //Set commitments
+        Commitment com = new Commitment(pid,s,1.0);
+        List<Commitment> commitments = new ArrayList<>();
+        commitments.add(com);
+        dp.getPositiveCommitments().put(pid,commitments);
+
+        if (dp.getNegativeCommitments().isEmpty())
+        {
+            dp.getNegativeCommitments().put(pid,new ArrayList<>());
+        }
 
         //Set relevance
         dp.getRelevance().put(pid, 1.0);
@@ -406,6 +451,26 @@ public class DiscourseModel {
             dp.getDeniesBelief().put(pid, new ArrayList<>());
         }
 
+
+        //Set positive and negative commitments
+        //Set commitments
+        Commitment com = new Commitment(pid,s,1.0);
+
+        if (!dp.getPositiveCommitments().keySet().contains(pid)) {
+            List<Commitment> commitments = new ArrayList<>();
+            commitments.add(com);
+            dp.getPositiveCommitments().put(pid, commitments);
+        } else
+        {
+            dp.getPositiveCommitments().get(pid).add(com);
+        }
+
+        if (dp.getNegativeCommitments().isEmpty())
+        {
+            dp.getNegativeCommitments().put(pid,new ArrayList<>());
+        }
+
+
         //Set relevance
         dp.getRelevance().put(pid, 1.0);
 
@@ -414,11 +479,19 @@ public class DiscourseModel {
     }
 
 
+    //Adds a proposition to all speakers beliefs;
+
     public void addProposition(List<Speaker> speakers, DiscourseProposition p, DiscourseProposition currentProposition) {
+        //For rigid belief system
         LinkedHashMap<String, List<Speaker>> bh = currentProposition.getBeliefHolder();
         LinkedHashMap<String, List<Speaker>> db = currentProposition.getDeniesBelief();
         String newID = p.getPid();
 
+        //For commitment-rating
+        LinkedHashMap<String,List<Commitment>> pc = currentProposition.getPositiveCommitments();
+        LinkedHashMap<String,List<Commitment>> nc = currentProposition.getNegativeCommitments();
+
+        //For rigid belief system
         try {
             if (!bh.containsKey(newID)) {
                 bh.put(newID, new ArrayList<>());
@@ -428,14 +501,64 @@ public class DiscourseModel {
             }
             for (Speaker s : speakers) {
                 if (db.get(p.getPid()).contains(s)) {
-                    bh.get(p.getPid()).remove(s);
+                    db.get(p.getPid()).remove(s);
                     System.out.println("Speaker " + s.toString() + "contradicts himself. Resolved controversial stance by retracting older conflicting belief");
                 }
                 bh.get(p.getPid()).add(s);
             }
 
+
+            //For commitment-rating
+            //Negative commitments
+            if (!nc.keySet().contains(newID))
+            {
+                nc.put(newID,new ArrayList<>());
+            }
+            else {
+
+                for (Commitment c : nc.get(newID)) {
+                    nc.get(newID).remove(c);
+                    System.out.println("Speaker " + c.getCommitmentHolder().toString() + "contradicts himself. Resolved controversial stance by retracting older conflicting belief");
+                }
+
+            }
+
+            //positive commitments
+            if (!pc.keySet().contains(newID))
+            {
+                pc.put(newID,new ArrayList<>());
+
+                for (Speaker s : speakers)
+                {
+                 Commitment c = new Commitment(newID,s,1.0);
+                 pc.get(newID).add(c);
+                }
+            } else {
+
+                List<Speaker> pcHolder = new ArrayList<>();
+
+                for (Commitment c : pc.get(newID)) {
+                    pcHolder.add(c.getCommitmentHolder());
+                }
+
+                for (Speaker s : speakers)
+                {
+                    if (!pcHolder.contains(s))
+                    {
+                        Commitment c = new Commitment(newID,s,1.0);
+                        pc.get(newID).add(c);
+                    }
+                }
+            }
+
+
             if (!currentProposition.getRelevance().containsKey(newID)) {
                 currentProposition.getRelevance().put(newID, 1.0);
+
+
+
+
+
             }
         } catch (Exception e) {
             System.out.println("Failed to add proposition " + p.toString());

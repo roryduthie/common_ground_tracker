@@ -1,14 +1,15 @@
 package kn.valida.gui;
 
+import kn.valida.discourseModel.Commitment;
 import kn.valida.discourseModel.DiscourseProposition;
+import kn.valida.discourseModel.Speaker;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.List;
+import java.util.*;
 
 public class PropositionRenderer extends DefaultListCellRenderer {
 
@@ -25,7 +26,11 @@ public class PropositionRenderer extends DefaultListCellRenderer {
     private Set<String> highlightRelevance = new HashSet<>();
     private Set<String> highlightCosineSimilarity = new HashSet<>();
 
+    //new commitment variant
+    private Set<String> highlightPositiveCommitments = new HashSet<>();
+    private Set<String> highlightNegativeCommitments = new HashSet<>();
 
+    private List<Speaker> selectedSpeakers = new ArrayList<>();
 
     private LinkedHashMap<String,DiscourseProposition> dpReference = new LinkedHashMap<>();
 
@@ -149,6 +154,7 @@ public class PropositionRenderer extends DefaultListCellRenderer {
         }
 
 
+
         /*
         if (!(currentPid == null)) {
             for (String pid : dpReference.get(currentPid).getRelevance().keySet()) {
@@ -174,6 +180,23 @@ public class PropositionRenderer extends DefaultListCellRenderer {
                             get(((DiscourseProposition) value).getPid()) * 100);
                     l.setBackground(new Color(255, 0, 0, opacity));
                 }
+            }
+
+
+            if (highlightPositiveCommitments.contains(((DiscourseProposition) value).getPid()))
+            {
+                Double opacity = 1.0;
+                for (Speaker s : getSelectedSpeakers())
+                {
+                    for (Commitment c : dpReference.get(currentPid).getPositiveCommitments().get(((DiscourseProposition) value).getPid())) {
+                        if (s.equals(c.getCommitmentHolder())) {
+                            opacity = (double) opacity * c.getCommitmentRating();
+                        break;
+                        }
+                    }
+                }
+                l.setBackground(new Color(0,0,255, (int) Math.round(opacity*100)));
+
             }
         }
 
@@ -213,6 +236,9 @@ public class PropositionRenderer extends DefaultListCellRenderer {
         highlightControversial = new HashSet<>();
         highlightRelevance = new HashSet<>();
         highlightCosineSimilarity = new HashSet<>();
+        highlightPositiveCommitments = new HashSet<>();
+        highlightNegativeCommitments = new HashSet<>();
+        selectedSpeakers = new ArrayList<>();
         currentPid = null;
         highlightCosine = false;
         highlightRel = false;
@@ -292,6 +318,31 @@ public class PropositionRenderer extends DefaultListCellRenderer {
     public void setHighlightCosine(Boolean highlightCosine) {
         this.highlightCosine = highlightCosine;
     }
+
+    public Set<String> getHighlightPositiveCommitments() {
+        return highlightPositiveCommitments;
+    }
+
+    public void setHighlightPositiveCommitments(Set<String> highlightPositiveCommitments) {
+        this.highlightPositiveCommitments = highlightPositiveCommitments;
+    }
+
+    public Set<String> getHighlightNegativeCommitments() {
+        return highlightNegativeCommitments;
+    }
+
+    public void setHighlightNegativeCommitments(Set<String> highlightNegativeCommitments) {
+        this.highlightNegativeCommitments = highlightNegativeCommitments;
+    }
+
+    public List<Speaker> getSelectedSpeakers() {
+        return selectedSpeakers;
+    }
+
+    public void setSelectedSpeakers(List<Speaker> selectedSpeakers) {
+        this.selectedSpeakers = selectedSpeakers;
+    }
+
 
 
 }

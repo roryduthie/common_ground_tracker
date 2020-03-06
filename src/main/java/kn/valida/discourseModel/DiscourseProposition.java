@@ -21,7 +21,6 @@ public class DiscourseProposition {
 
     //Experimental
     private LinkedHashMap<String,Double> relevance = new LinkedHashMap<>();
-
     private LinkedHashMap<String,Double> semanticSimilarity = new LinkedHashMap<>();
     private float[] embedding;
 
