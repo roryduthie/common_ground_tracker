@@ -130,6 +130,7 @@ public class GUI {
     ActionListener loadListener = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
+            locus = 0;
             final JFileChooser dir = new JFileChooser();
             dir.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int returnVal = dir.showOpenDialog(guiFrame);

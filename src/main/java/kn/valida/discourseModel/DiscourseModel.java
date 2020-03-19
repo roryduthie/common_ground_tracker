@@ -149,15 +149,19 @@ public class DiscourseModel {
                             //Indirect moves (i.e. via transition)
                             List<Node> motherNodes = Edge.findMother(l, map.getEdges(), "Default Transition");
 
-                            agreeMove(motherNodes, map, dp);
 
-                            disagreeMove(motherNodes, map, dp);
+                            try {
+                                agreeMove(motherNodes, map, dp);
 
-                            argueMove(motherNodes, map, dp);
+                                disagreeMove(motherNodes, map, dp);
 
-                            restateMove(motherNodes, map, dp);
+                                argueMove(motherNodes, map, dp);
 
-
+                                restateMove(motherNodes, map, dp);
+                            } catch (Exception e) {
+                                System.out.println("Processing discourse move failed:");
+                                e.printStackTrace();
+                            }
                         }
 
 

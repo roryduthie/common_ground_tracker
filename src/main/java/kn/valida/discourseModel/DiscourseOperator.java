@@ -3,6 +3,7 @@ package kn.valida.discourseModel;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
 import kn.valida.iatReader.Proposition;
 import kn.valida.utilities.VariableHandler;
 
@@ -425,8 +426,11 @@ public class DiscourseOperator {
     public String writeDiscourseModelToJson() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
 
+        List<DiscourseProposition> output = dm.getDiscoursePropositions();
+
+
         try {
-            String jsonString = mapper.writeValueAsString(dm.getDiscoursePropositions());
+            String jsonString = new Gson().toJson(output);
             return jsonString;
         }catch(Exception e)
         {
