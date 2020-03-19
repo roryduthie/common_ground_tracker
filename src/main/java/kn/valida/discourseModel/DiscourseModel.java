@@ -1,6 +1,5 @@
 package kn.valida.discourseModel;
 
-import com.robrua.nlp.bert.Bert;
 import kn.valida.iatReader.*;
 import kn.valida.utilities.VariableHandler;
 
@@ -18,7 +17,7 @@ public class DiscourseModel {
 
     private LinkedHashMap<String, DiscourseProposition> dpReference = new LinkedHashMap<>();
 
-    private Bert bert = Bert.load("com/robrua/nlp/easy-bert/bert-multi-cased-L-12-H-768-A-12");
+  //  private Bert bert = Bert.load("com/robrua/nlp/easy-bert/bert-multi-cased-L-12-H-768-A-12");
 
     public DiscourseModel() {
     }
@@ -261,16 +260,16 @@ public class DiscourseModel {
         }
 
         //Update commitments
-        LinkedHashMap<String,List<Commitment>> currentCommitments = new LinkedHashMap<>();
-        try{
+        LinkedHashMap<String, List<Commitment>> currentCommitments = new LinkedHashMap<>();
+        try {
             for (String key : discoursePropositions.getLast().getPositiveCommitments().keySet()) {
                 List<Commitment> commitments = new ArrayList<>();
 
                 for (Commitment c : discoursePropositions.getLast().getPositiveCommitments().get(key)) {
-                    c.setCommitmentRating(c.getCommitmentRating()*0.95);
+                    c.setCommitmentRating(c.getCommitmentRating() * 0.95);
                     commitments.add(c);
                 }
-                currentCommitments.put(key,commitments);
+                currentCommitments.put(key, commitments);
 
             }
             dp.setPositiveCommitments(currentCommitments);
@@ -281,15 +280,14 @@ public class DiscourseModel {
                 List<Commitment> negativeCommitments = new ArrayList<>();
 
                 for (Commitment commitment : discoursePropositions.getLast().getNegativeCommitments().get(key)) {
-                    commitment.setCommitmentRating(commitment.getCommitmentRating()*0.95);
+                    commitment.setCommitmentRating(commitment.getCommitmentRating() * 0.95);
                     negativeCommitments.add(commitment);
                 }
-                currentNegativeCommitments.put(key,negativeCommitments);
+                currentNegativeCommitments.put(key, negativeCommitments);
             }
             dp.setNegativeCommitments(currentNegativeCommitments);
 
-        }catch(Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("Error while updating commitment ratings ");
         }
 
@@ -306,10 +304,12 @@ public class DiscourseModel {
         } catch (Exception e) {
             System.out.println("Couldn't update relevance for previous propositions");
         }
+    }
 
         //Calculate semantic similarity
 
         //try(Bert bert = Bert.load("com/robrua/nlp/easy-bert/bert-uncased-L-12-H-768-A-12"))
+        /*
         try {
             float[] embedding = dp.getEmbedding();
 
@@ -359,14 +359,15 @@ public class DiscourseModel {
 
     }
 
+         */
     /*
     Intializes an asserted proposition!
      */
 
     public DiscourseProposition initializeDP(Node daugtherNode, Locution l, LinkedList<DiscourseProposition> intermediatePropositionList) {
         String pid = (String) VariableHandler.returnNewVar(VariableHandler.variableType.PROPOSITION);
-        float[] embedding = calculateEmbeddings(daugtherNode.getText());
-        DiscourseProposition dp = new DiscourseProposition(pid, daugtherNode.getText(), embedding);
+      //  float[] embedding = calculateEmbeddings(daugtherNode.getText());
+        DiscourseProposition dp = new DiscourseProposition(pid, daugtherNode.getText());
         dpReference.put(pid, dp);
 
         Speaker s = isParticipant(l.getSpeaker(), discourseParticipants);
@@ -421,9 +422,9 @@ public class DiscourseModel {
         String pid = (String) VariableHandler.returnNewVar(VariableHandler.variableType.PROPOSITION);
 
         //Calculate embeddings
-        float[] embedding = calculateEmbeddings(l.getText());
+      //  float[] embedding = calculateEmbeddings(l.getText());
 
-        DiscourseProposition dp = new DiscourseProposition(pid, "discourse_move(" + l.getText() + ")", embedding);
+        DiscourseProposition dp = new DiscourseProposition(pid, "discourse_move(" + l.getText() + ")");
         dpReference.put(pid, dp);
         Speaker s = isParticipant(l.getSpeaker(), discourseParticipants);
         if (s == null) {
@@ -482,10 +483,13 @@ public class DiscourseModel {
     //Adds a proposition to all speakers beliefs;
 
     public void addProposition(List<Speaker> speakers, DiscourseProposition p, DiscourseProposition currentProposition) {
+
+        String newID = p.getPid();
+
         //For rigid belief system
         LinkedHashMap<String, List<Speaker>> bh = currentProposition.getBeliefHolder();
         LinkedHashMap<String, List<Speaker>> db = currentProposition.getDeniesBelief();
-        String newID = p.getPid();
+
 
         //For commitment-rating
         LinkedHashMap<String,List<Commitment>> pc = currentProposition.getPositiveCommitments();
@@ -500,20 +504,27 @@ public class DiscourseModel {
                 db.put(newID, new ArrayList<>());
             }
             for (Speaker s : speakers) {
+                //Comment in for non-contradictory CG
+                /*
                 if (db.get(p.getPid()).contains(s)) {
                     db.get(p.getPid()).remove(s);
                     System.out.println("Speaker " + s.toString() + "contradicts himself. Resolved controversial stance by retracting older conflicting belief");
                 }
+                 */
                 bh.get(p.getPid()).add(s);
             }
 
 
             //For commitment-rating
             //Negative commitments
+            //To avoid null pointer exceptions
             if (!nc.keySet().contains(newID))
             {
                 nc.put(newID,new ArrayList<>());
             }
+
+            //Comment in for non-contradictory CG
+            /*
             else {
 
                 for (Commitment c : nc.get(newID)) {
@@ -522,6 +533,7 @@ public class DiscourseModel {
                 }
 
             }
+             */
 
             //positive commitments
             if (!pc.keySet().contains(newID))
@@ -555,10 +567,6 @@ public class DiscourseModel {
             if (!currentProposition.getRelevance().containsKey(newID)) {
                 currentProposition.getRelevance().put(newID, 1.0);
 
-
-
-
-
             }
         } catch (Exception e) {
             System.out.println("Failed to add proposition " + p.toString());
@@ -583,10 +591,13 @@ public class DiscourseModel {
                         //Make relevant again if it is used in IAT argumentation scheme
                         dp.getRelevance().replace(propToDiscProp.get(p).getPid(), 1.0);
 
-                        //TODO do we want to avoid inconsistency (i.e. contradicting beliefs?)
+                        //do we want to avoid inconsistency (i.e. contradicting beliefs?)
+                        //No, but comment this in if so
+                        /*
                         if (dp.getDeniesBelief().get(propToDiscProp.get(p).getPid()).contains(dp.getOriginalSpeaker())) {
                             dp.getDeniesBelief().get(propToDiscProp.get(p).getPid()).remove(dp.getOriginalSpeaker());
                         }
+                         */
                     }
                 }
             }
@@ -616,12 +627,16 @@ public class DiscourseModel {
                         if (q instanceof Proposition) {
                             if (propToDiscProp.keySet().contains(q)) {
 
-                                //Retract commitment if it is in conflict with previous agreement
+                                //TODO
+                                //Comment in to retract commitment if it is in conflict with previous agreement
+                                /*
                                 if (dp.getOriginalSpeaker().equals(propToDiscProp.get(q).getOriginalSpeaker())) {
                                     dp.getBeliefHolder().get(propToDiscProp.get(q).getPid()).remove(propToDiscProp.get(q).getOriginalSpeaker());
                                 } else {
+
+                                 */
                                     dp.getDeniesBelief().get(propToDiscProp.get((q)).getPid()).add(dp.getOriginalSpeaker());
-                                }
+                              //  }
 
                                 //Make relevant again if it is used in IAT argumentation scheme
                                 dp.getRelevance().replace(propToDiscProp.get(q).getPid(), 1.0);
@@ -723,6 +738,8 @@ public class DiscourseModel {
     Weak asserting
      */
 
+    /*
+
     public LinkedList<DiscourseProposition> mergeSpeakers2(List<DiscourseProposition> dps,
                                                            HashMap<Proposition,DiscourseProposition> pstodps,
                                                            Speaker a, Speaker b, Speaker combined)
@@ -806,12 +823,12 @@ public class DiscourseModel {
             }
 
             DiscourseProposition mergedProposition = new DiscourseProposition(p.getPid(),p.getText(),mergedOriginalSpeaker,
-                    newBeliefs,newDenials,p.getExpressiveContent(),p.getEmbedding());
+                    newBeliefs,newDenials,p.getExpressiveContent());
 
             mergedProposition.setExpressiveContent(mergeSpeakers2(p.getExpressiveContent(),pstodps,a,b,combined));
 
             mergedProposition.setRelevance(p.getRelevance());
-            mergedProposition.setSemanticSimilarity(p.getSemanticSimilarity());
+           // mergedProposition.setSemanticSimilarity(p.getSemanticSimilarity());
 
 
                 for (Proposition key : propToDiscProp.keySet()) {
@@ -855,16 +872,12 @@ public class DiscourseModel {
         LinkedList<DiscourseProposition> mergedDiscoursePropositions =
                 mergeSpeakers2(discoursePropositions,mergedPropToDiscProp,a,b,combined);
 
-
-
-
-
-
         DiscourseModel mergedDiscourseModel = new DiscourseModel(mergedDiscoursePropositions,mergedSpeakers,mergedPropToDiscProp);
 
         return mergedDiscourseModel;
     }
 
+*/
 
     public LinkedHashMap<String, DiscourseProposition> getDpReference() {
         return dpReference;
@@ -874,11 +887,13 @@ public class DiscourseModel {
         this.dpReference = dpReference;
     }
 
+    /*
     public float[] calculateEmbeddings(String text)
     {
         // Simple Bert version
         return bert.embedSequence(text);
 
+        */
         //Complex Bert version
 
         /*
@@ -896,10 +911,11 @@ public class DiscourseModel {
             return averageVector;
         }
         return null;
+        }
          */
-    }
 
 
+/*
     public static double cosineSimilarity(float[] vectorA, float[] vectorB) {
 
         if (vectorA.length == vectorB.length) {
@@ -919,7 +935,7 @@ public class DiscourseModel {
             return 1;
         }
     }
-
+*/
 
     public List<IATmap> getAnnotatedDebate() {
         return annotatedDebate;
@@ -943,6 +959,14 @@ public class DiscourseModel {
 
     public void setDiscourseParticipants(List<Speaker> discourseParticipants) {
         this.discourseParticipants = discourseParticipants;
+    }
+
+    public HashMap<Proposition, DiscourseProposition> getPropToDiscProp() {
+        return propToDiscProp;
+    }
+
+    public void setPropToDiscProp(HashMap<Proposition, DiscourseProposition> propToDiscProp) {
+        this.propToDiscProp = propToDiscProp;
     }
 
 

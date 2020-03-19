@@ -1,17 +1,14 @@
 package kn.valida.gui;
 
-import kn.valida.discourseModel.Commitment;
-import kn.valida.discourseModel.DiscourseModel;
-import kn.valida.discourseModel.DiscourseProposition;
-import kn.valida.discourseModel.Speaker;
+import kn.valida.discourseModel.*;
 import kn.valida.iatReader.IATmap;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FilenameFilter;
+import java.io.*;
 import java.util.List;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -34,10 +31,13 @@ public class GUI {
     private JButton goForwardFastButton;
     private JButton mergeSpeakersButton;
     private JButton showRelevanceButton;
-    private JButton cosineSimilarityButton;
     private JButton showCommitmentRatingsButton;
+    private JButton showContradictoryButton;
+    private JButton writeToJSONButton;
+    private JButton calculateAllComitmentsButton;
 
     private DiscourseModel dm;
+    private DiscourseOperator operator;
 
     public JFrame guiFrame;
 
@@ -194,6 +194,7 @@ public class GUI {
 
 
                     dm = new DiscourseModel(maps);
+                    operator = new DiscourseOperator(dm);
 
                     initializeGUI();
 
@@ -217,6 +218,7 @@ public class GUI {
 
 
         this.dm = dm;
+        this.operator = new DiscourseOperator(dm);
         this.guiFrame = frame;
         this.propositionIDLabel.setText(locus.toString());
 
@@ -252,6 +254,7 @@ public class GUI {
         });
                 }
                 */
+
 
 
     }
@@ -433,6 +436,23 @@ public class GUI {
                     if (speakerList.isSelectionEmpty()) {
                         JOptionPane.showMessageDialog(guiFrame, "Select at least one speaker to highlight commitments");
                     } else {
+
+                        List<Speaker> speakers = new ArrayList<>();
+                        for (int i : speakerList.getSelectedIndices())
+                        {
+                            speakers.add((Speaker) speakerList.getModel().getElementAt(i));
+                        }
+
+                        HashMap<String,Set> commitments = operator.calculateCommitments(speakers,locus);
+
+                        ((PropositionRenderer) propositionList.getCellRenderer()).
+                                setHighlightCommitments(commitments.get("commitments"));
+
+                        ((PropositionRenderer) propositionList.getCellRenderer()).
+                                setHighlightJointCommitments(commitments.get("jointCommitments"));
+
+
+                        /*
                         DiscourseProposition current = (DiscourseProposition) propositionList.getModel().getElementAt(locus);
 
                         //List<String>
@@ -461,6 +481,7 @@ public class GUI {
 
                         // speakerList.clearSelection();
 
+                         */
                         propositionList.repaint();
 
                     }
@@ -468,6 +489,7 @@ public class GUI {
             });
         }
 
+        //TODO If both deny belief it's also a joint commitment
         if (showCommitmentRatingsButton.getActionListeners().length == 0) {
             showCommitmentRatingsButton.addActionListener(new ActionListener() {
                 @Override
@@ -550,22 +572,35 @@ public class GUI {
                 public void actionPerformed(ActionEvent e) {
                     ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
                     propositionList.repaint();
+
+                    Set<String> unresolved = operator.calculateUnresolved(locus);
+
+                    ((PropositionRenderer) propositionList.getCellRenderer()).setHighlightUnresolved(unresolved);
+
+
+                    /*
                     DiscourseProposition current = (DiscourseProposition) propositionList.getModel().getElementAt(locus);
 
                     for (String key : current.getBeliefHolder().keySet()) {
                         Boolean containsAll = true;
-                        for (Speaker s : current.getBeliefHolder().get(key)) {
-                            if (dm.getDiscourseParticipants().contains(s)) {
-                                continue;
-                            } else {
-                                containsAll = false;
-                                break;
+                        if (!current.getBeliefHolder().get(key).isEmpty()) {
+
+
+                            for (Speaker s : dm.getDiscourseParticipants()) {
+                                if (current.getBeliefHolder().get(key).contains(s)) {
+                                    continue;
+                                } else {
+                                    containsAll = false;
+                                    break;
+                                }
+                            }
+                            if (!containsAll) {
+                                ((PropositionRenderer) propositionList.getCellRenderer()).getHighlightUnresolved().add(key);
                             }
                         }
-                        if (!containsAll) {
-                            ((PropositionRenderer) propositionList.getCellRenderer()).getHighlightUnresolved().add(key);
-                        }
                     }
+
+                     */
                     propositionList.repaint();
 
                 }
@@ -578,18 +613,59 @@ public class GUI {
                 public void actionPerformed(ActionEvent e) {
                     ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
                     propositionList.repaint();
-                    DiscourseProposition current = (DiscourseProposition) propositionList.getModel().getElementAt(locus);
 
+                    ((PropositionRenderer) propositionList.getCellRenderer()).
+                            setHighlightControversial(operator.calculateControversial(locus));
+
+                    propositionList.repaint();
+                    /*
                     for (String key : (current.getBeliefHolder().keySet())) {
                         if (!current.getBeliefHolder().get(key).isEmpty() && !current.getDeniesBelief().get(key).isEmpty()) {
-                            ((PropositionRenderer) propositionList.getCellRenderer()).getHighlightControversial().add(key);
+                            getHighlightControversial().add(key);
                         }
-                    }
+                    }*/
 
                 }
             });
         }
+        if (showContradictoryButton.getActionListeners().length==0) {
+            showContradictoryButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    ((PropositionRenderer) propositionList.getCellRenderer()).resetLists();
+                    propositionList.repaint();
 
+                    ((PropositionRenderer) propositionList.getCellRenderer()).
+                            setContradictoryProposition(operator.calculateContradictory(locus).keySet());
+
+                    propositionList.repaint();
+
+                    /*
+                    DiscourseProposition current = (DiscourseProposition) propositionList.getModel().getElementAt(locus);
+
+                    if (speakerList.getSelectedIndices().length==0) {
+                        JOptionPane.showMessageDialog(guiFrame, "Select at least one speaker to show contradictions");
+                    } else {
+
+
+                        for (String key : current.getBeliefHolder().keySet()) {
+                            for (int i : speakerList.getSelectedIndices()) {
+                                Speaker s = (Speaker) speakerList.getModel().getElementAt(i);
+
+                                if (current.getBeliefHolder().get(key).contains(s) && current.getDeniesBelief().get(key).contains(s)) {
+                                    ((PropositionRenderer) propositionList.getCellRenderer()).getContradictoryProposition().
+                                            add(key);
+                                }
+                            }
+                        }
+                    }
+                }
+                     */
+                }
+            });
+        }
+
+/*
         if (cosineSimilarityButton.getActionListeners().length == 0) {
             cosineSimilarityButton.addActionListener(new ActionListener() {
                 @Override
@@ -604,14 +680,17 @@ public class GUI {
                     ((PropositionRenderer) propositionList.getCellRenderer()).setCurrentPid(
                             (current.getPid()));
 
+
                     for (String key : current.getSemanticSimilarity().keySet()) {
                         ((PropositionRenderer) propositionList.getCellRenderer()).getHighlightCosineSimilarity().add(key);
                     }
 
+
+
                 }
             });
         }
-
+*/
 
         if (showRelevanceButton.getActionListeners().length == 0) {
             showRelevanceButton.addActionListener(new ActionListener() {
@@ -642,7 +721,7 @@ public class GUI {
                 public void actionPerformed(ActionEvent e) {
                     if (speakerList.getSelectedIndices().length == 2) {
 
-                        DiscourseModel dm2 = dm.mergeSpeakers((Speaker) speakerList.getModel().getElementAt(speakerList.getSelectedIndices()[0]),
+                        DiscourseModel dm2 = operator.mergeSpeakers((Speaker) speakerList.getModel().getElementAt(speakerList.getSelectedIndices()[0]),
                                 (Speaker) speakerList.getModel().getElementAt(speakerList.getSelectedIndices()[1]));
 
                         JFrame frame = new JFrame("Main");
@@ -663,6 +742,66 @@ public class GUI {
             });
         }
 
+        if (writeToJSONButton.getActionListeners().length == 0) {
+            writeToJSONButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+
+                    final JFileChooser saveFile = new JFileChooser();
+
+                    saveFile.addChoosableFileFilter(new FileNameExtensionFilter("json files", "json"));
+                    //FileChooser.ExtensionFilter("treebank files (*.treebank)","*.treebank"))
+
+
+                    // saveFile.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                    //int returnVal = saveFile.showOpenDialog(guiFrame);
+
+                    if (saveFile.showSaveDialog(guiFrame) == JFileChooser.APPROVE_OPTION) {
+                        File dir = saveFile.getSelectedFile();
+
+                        if (dir.toPath().toString().matches(".+\\.json")) {
+
+                            try {
+                                FileOutputStream fos = new FileOutputStream(dir.toPath().toString());
+                                ObjectOutputStream oos = new ObjectOutputStream(fos);
+                                oos.writeObject(operator.writeDiscourseModelToJson());
+                                oos.close();
+                            } catch (NotSerializableException nse) {
+                                System.out.println("Serialization error!");
+                            } catch (IOException ex) {
+                                System.out.println("IO Error");
+                            }
+
+                        } else {
+                            JOptionPane.showMessageDialog(guiFrame, "Invalid file name");
+                        }
+
+
+                    } else if (saveFile.showSaveDialog(guiFrame) == JFileChooser.CANCEL_OPTION) {
+                        JOptionPane.showMessageDialog(guiFrame, "Cancelled");
+                    } else if (saveFile.showSaveDialog(guiFrame) == JFileChooser.ERROR_OPTION) {
+                        JOptionPane.showMessageDialog(guiFrame, "An error occured.");
+                    } else {
+                        JOptionPane.showMessageDialog(guiFrame, "Unknown operation");
+
+                    }
+
+
+                }
+            });
+        }
+
+        if (calculateAllComitmentsButton.getActionListeners().length==0) {
+            calculateAllComitmentsButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    operator.calculateAllCommitments(locus);
+
+                }
+            });
+        }
 
     }
+
+
 }

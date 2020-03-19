@@ -13,6 +13,7 @@ import java.util.*;
 
 public class PropositionRenderer extends DefaultListCellRenderer {
 
+    //All sets of Strings are sets of pids
     private Border padBorder = new EmptyBorder(3,3,3,3);
     private Set<String> highlightCommitments = new HashSet<>();
     private Set<String> highlightJointCommitments = new HashSet<>();
@@ -21,14 +22,19 @@ public class PropositionRenderer extends DefaultListCellRenderer {
     private String currentPid;
 
     private Boolean highlightRel = false;
-    private Boolean highlightCosine = false;
+ //   private Boolean highlightCosine = false;
 
     private Set<String> highlightRelevance = new HashSet<>();
-    private Set<String> highlightCosineSimilarity = new HashSet<>();
+  //  private Set<String> highlightCosineSimilarity = new HashSet<>();
 
     //new commitment variant
     private Set<String> highlightPositiveCommitments = new HashSet<>();
     private Set<String> highlightNegativeCommitments = new HashSet<>();
+
+    //For contradiction
+    private Set<String> inContradictionState = new HashSet<>();
+    private Set<String> contradictoryProposition = new HashSet<>();
+
 
     private List<Speaker> selectedSpeakers = new ArrayList<>();
 
@@ -115,6 +121,7 @@ public class PropositionRenderer extends DefaultListCellRenderer {
                             m.setBackground(new Color(0, 0, 255, opacity));
                         }
                     }
+                    /*
                     if (highlightCosine) {
                         if (highlightCosineSimilarity.contains(p.getPid())) {
                             Integer opacity = (int) Math.round(dpReference.get(currentPid).getSemanticSimilarity().
@@ -122,6 +129,8 @@ public class PropositionRenderer extends DefaultListCellRenderer {
                             m.setBackground(new Color(255, 0, 0, opacity));
                         }
                     }
+
+                     */
 
                 }
 
@@ -153,6 +162,10 @@ public class PropositionRenderer extends DefaultListCellRenderer {
             l.setBackground(new Color(255,0,0,20));
         }
 
+        if (contradictoryProposition.contains(((DiscourseProposition) value).getPid()))
+        {
+            l.setBackground(new Color(255,0,0,50));
+        }
 
 
         /*
@@ -174,6 +187,7 @@ public class PropositionRenderer extends DefaultListCellRenderer {
                 }
             }
 
+            /*
             if (highlightCosine) {
                 if (highlightCosineSimilarity.contains(((DiscourseProposition) value).getPid())) {
                     Integer opacity = (int) Math.round(dpReference.get(currentPid).getSemanticSimilarity().
@@ -181,6 +195,8 @@ public class PropositionRenderer extends DefaultListCellRenderer {
                     l.setBackground(new Color(255, 0, 0, opacity));
                 }
             }
+
+             */
 
 
             if (highlightPositiveCommitments.contains(((DiscourseProposition) value).getPid()))
@@ -235,12 +251,16 @@ public class PropositionRenderer extends DefaultListCellRenderer {
         highlightUnresolved = new HashSet<>();
         highlightControversial = new HashSet<>();
         highlightRelevance = new HashSet<>();
-        highlightCosineSimilarity = new HashSet<>();
+    //    highlightCosineSimilarity = new HashSet<>();
         highlightPositiveCommitments = new HashSet<>();
         highlightNegativeCommitments = new HashSet<>();
+
+        contradictoryProposition = new HashSet<>();
+        inContradictionState = new HashSet<>();
+
         selectedSpeakers = new ArrayList<>();
         currentPid = null;
-        highlightCosine = false;
+    //    highlightCosine = false;
         highlightRel = false;
     }
 
@@ -295,6 +315,7 @@ public class PropositionRenderer extends DefaultListCellRenderer {
         this.highlightRelevance = highlightRelevance;
     }
 
+    /*
     public Set<String> getHighlightCosineSimilarity() {
         return highlightCosineSimilarity;
     }
@@ -302,6 +323,8 @@ public class PropositionRenderer extends DefaultListCellRenderer {
     public void setHighlightCosineSimilarity(Set<String> highlightCosineSimilarity) {
         this.highlightCosineSimilarity = highlightCosineSimilarity;
     }
+
+     */
 
     public Boolean getHighlightRel() {
         return highlightRel;
@@ -311,6 +334,7 @@ public class PropositionRenderer extends DefaultListCellRenderer {
         this.highlightRel = highlightRel;
     }
 
+    /*
     public Boolean getHighlightCosine() {
         return highlightCosine;
     }
@@ -318,7 +342,7 @@ public class PropositionRenderer extends DefaultListCellRenderer {
     public void setHighlightCosine(Boolean highlightCosine) {
         this.highlightCosine = highlightCosine;
     }
-
+     */
     public Set<String> getHighlightPositiveCommitments() {
         return highlightPositiveCommitments;
     }
@@ -343,7 +367,21 @@ public class PropositionRenderer extends DefaultListCellRenderer {
         this.selectedSpeakers = selectedSpeakers;
     }
 
+    public Set<String> getInContradictionState() {
+        return inContradictionState;
+    }
 
+    public void setInContradictionState(Set<String> inContradictionState) {
+        this.inContradictionState = inContradictionState;
+    }
+
+    public Set<String> getContradictoryProposition() {
+        return contradictoryProposition;
+    }
+
+    public void setContradictoryProposition(Set<String> contradictoryProposition) {
+        this.contradictoryProposition = contradictoryProposition;
+    }
 
 }
 

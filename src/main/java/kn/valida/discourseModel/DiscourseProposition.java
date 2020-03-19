@@ -13,16 +13,16 @@ public class DiscourseProposition {
     /*TODO maybe make this one static for all DiscoursePropositions then the map doesn't have to be copied again and
     again
     */
+    private String text;
     private LinkedHashMap<String,List<Speaker>> beliefHolder = new LinkedHashMap<>();
     private LinkedHashMap<String,List<Speaker>> deniesBelief = new LinkedHashMap<>();
-    private String text;
     private List<DiscourseProposition> expressiveContent = new ArrayList<>();
 
 
     //Experimental
     private LinkedHashMap<String,Double> relevance = new LinkedHashMap<>();
-    private LinkedHashMap<String,Double> semanticSimilarity = new LinkedHashMap<>();
-    private float[] embedding;
+//    private LinkedHashMap<String,Double> semanticSimilarity = new LinkedHashMap<>();
+    //   private float[] embedding;
 
     //Even more experimental
     private LinkedHashMap<String,List<Commitment>> positiveCommitments = new LinkedHashMap<>();
@@ -41,6 +41,7 @@ public class DiscourseProposition {
     public DiscourseProposition()
     {}
 
+    /*
     public DiscourseProposition(String pid, String text, float[] embedding)
     {
         this.pid = pid;
@@ -48,7 +49,17 @@ public class DiscourseProposition {
         this.embedding = embedding;
 
         }
+     */
 
+    public DiscourseProposition(String pid, String text)
+    {
+        this.pid = pid;
+        this.text = text;
+        //  this.embedding = embedding;
+
+    }
+
+    /*
     public DiscourseProposition(String pid, String text, Speaker originalSpeaker,
                                 LinkedHashMap<String,List<Speaker>> beliefHolder,
                                 LinkedHashMap<String,List<Speaker>> deniesBelief,
@@ -62,6 +73,21 @@ public class DiscourseProposition {
         this.deniesBelief = deniesBelief;
         this.expressiveContent = expressiveContent;
         this.embedding = embedding;
+    }
+     */
+
+    public DiscourseProposition(String pid, String text, Speaker originalSpeaker,
+                                LinkedHashMap<String,List<Speaker>> beliefHolder,
+                                LinkedHashMap<String,List<Speaker>> deniesBelief,
+                                List<DiscourseProposition> expressiveContent)
+
+    {
+        this.pid = pid;
+        this.text = text;
+        this.originalSpeaker = originalSpeaker;
+        this.beliefHolder = beliefHolder;
+        this.deniesBelief = deniesBelief;
+        this.expressiveContent = expressiveContent;
     }
 
 
@@ -129,6 +155,8 @@ public class DiscourseProposition {
         this.relevance = relevance;
     }
 
+
+    /*
     public LinkedHashMap<String, Double> getSemanticSimilarity() {
         return semanticSimilarity;
     }
@@ -145,9 +173,12 @@ public class DiscourseProposition {
         this.embedding = embedding;
     }
 
+*/
+
     public LinkedHashMap<String, List<Commitment>> getPositiveCommitments() {
         return positiveCommitments;
     }
+
 
     public void setPositiveCommitments(LinkedHashMap<String, List<Commitment>> positiveCommitments) {
         this.positiveCommitments = positiveCommitments;
