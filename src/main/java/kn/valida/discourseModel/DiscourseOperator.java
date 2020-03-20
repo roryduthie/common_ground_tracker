@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
-import kn.valida.iatReader.Proposition;
 import kn.valida.utilities.VariableHandler;
 
 import java.util.*;
@@ -287,7 +286,7 @@ public class DiscourseOperator {
 
         mergedSpeakers.add(combined);
 
-        HashMap<Proposition,DiscourseProposition> mergedPropToDiscProp = new HashMap<>();
+        HashMap<Integer,DiscourseProposition> mergedPropToDiscProp = new HashMap<>();
 
         LinkedList<DiscourseProposition> mergedDiscoursePropositions =
                 mergeSpeakers2(dm.getDiscoursePropositions(),mergedPropToDiscProp,a,b,combined);
@@ -309,7 +308,7 @@ public class DiscourseOperator {
 
 
     public LinkedList<DiscourseProposition> mergeSpeakers2(List<DiscourseProposition> dps,
-                                                           HashMap<Proposition,DiscourseProposition> pstodps,
+                                                           HashMap<Integer,DiscourseProposition> pstodps,
                                                            Speaker a, Speaker b, Speaker combined)
     {
         LinkedList<DiscourseProposition> mergedDiscoursePropositions = new LinkedList<>();
@@ -390,7 +389,7 @@ public class DiscourseOperator {
                 mergedOriginalSpeaker = p.getOriginalSpeaker();
             }
 
-            DiscourseProposition mergedProposition = new DiscourseProposition(p.getPid(),p.getText(),mergedOriginalSpeaker,
+            DiscourseProposition mergedProposition = new DiscourseProposition(p.getPid(),p.getAnchor(), p.getText(),mergedOriginalSpeaker,
                     newBeliefs,newDenials,p.getExpressiveContent());
 
             mergedProposition.setExpressiveContent(mergeSpeakers2(p.getExpressiveContent(),pstodps,a,b,combined));
@@ -399,9 +398,9 @@ public class DiscourseOperator {
             // mergedProposition.setSemanticSimilarity(p.getSemanticSimilarity());
 
 
-            for (Proposition key : dm.getPropToDiscProp().keySet()) {
+            for (Integer key : dm.getIatToDiscourse().keySet()) {
                 try {
-                    if (dm.getPropToDiscProp().get(key).equals(p)) {
+                    if (dm.getIatToDiscourse().get(key).equals(p)) {
                         pstodps.put(key,mergedProposition);
                         break;
                     }
