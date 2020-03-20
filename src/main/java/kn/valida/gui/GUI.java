@@ -130,6 +130,7 @@ public class GUI {
     ActionListener loadListener = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
+            locus = 0;
             final JFileChooser dir = new JFileChooser();
             dir.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int returnVal = dir.showOpenDialog(guiFrame);
@@ -148,10 +149,11 @@ public class GUI {
                         }
                     });
 
+                    // Sorts File per ID
                     Arrays.sort(fileArray, new Comparator<File>() {
                         @Override
                         public int compare(File o1, File o2) {
-                            Pattern mapID = Pattern.compile(".*-(\\d+)\\.json");
+                            Pattern mapID = Pattern.compile(".*(\\d+)\\.json");
 
                             Matcher o1Matcher = mapID.matcher(o1.getName());
                             Matcher o2Matcher = mapID.matcher(o2.getName());
@@ -171,6 +173,8 @@ public class GUI {
                         }
                     });
 
+
+
                     //StringBuilder sb = new StringBuilder();
 
 
@@ -181,6 +185,8 @@ public class GUI {
                     //            System.out.println(json.toString());
 
 
+
+
                     List<IATmap> maps = new ArrayList<>();
 
 
@@ -189,9 +195,11 @@ public class GUI {
                             maps.add(IATmap.analyzeIATmap(file));
                         } catch (Exception exc) {
                             System.out.println("Couldn't load file: " + file.toString());
+                            exc.printStackTrace();
                         }
                     }
 
+                    Collections.reverse(maps);
 
                     dm = new DiscourseModel(maps);
                     operator = new DiscourseOperator(dm);

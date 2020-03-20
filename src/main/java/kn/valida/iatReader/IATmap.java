@@ -49,6 +49,9 @@ public class IATmap {
         JSONArray jsonedges = (JSONArray) json.get("edges");
 
         //Collect nodes into list
+
+
+
         if (jsonnodes != null) {
             int len = jsonnodes.length();
             for (int j = 0; j < len; j++) {
@@ -170,7 +173,8 @@ public class IATmap {
                 Edge edge = new Edge(mother, daughter);
                 edgesInMap.add(edge);
             } else{
-                System.out.println("Invalid edge at " + e.toString() +"-- mother or daughter missing.");
+                System.out.println("Invalid edge at " + file.toString() + ": ");
+                System.out.println(e.toString() +"-- mother or daughter missing.");
             }
 
 

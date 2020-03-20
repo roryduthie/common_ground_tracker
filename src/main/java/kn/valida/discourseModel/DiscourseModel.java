@@ -11,9 +11,9 @@ public class DiscourseModel {
     //Discourse propositions provide temporal ordering for the whole model, i.e. everything revolves around these
     private LinkedList<DiscourseProposition> discoursePropositions;
     private List<Speaker> discourseParticipants = new ArrayList<>();
-    private HashMap<Proposition, DiscourseProposition> propToDiscProp = new HashMap();
+    private HashMap<Integer, DiscourseProposition> iatToDiscourse = new HashMap();
     //TODO Prettier way to align discourse model and IAT model?
-    private HashMap<Integer, String> propIDtoDiscPropID = new HashMap();
+  //  private HashMap<Integer, String> propIDtoDiscPropID = new HashMap();
 
     private LinkedHashMap<String, DiscourseProposition> dpReference = new LinkedHashMap<>();
 
@@ -22,10 +22,10 @@ public class DiscourseModel {
     public DiscourseModel() {
     }
 
-    public DiscourseModel(LinkedList discoursePropositions, List<Speaker> discourseParticipants, HashMap<Proposition, DiscourseProposition> propToDiscProp) {
+    public DiscourseModel(LinkedList discoursePropositions, List<Speaker> discourseParticipants, HashMap<Integer, DiscourseProposition> iatToDiscourse) {
         this.discoursePropositions = discoursePropositions;
         this.discourseParticipants = discourseParticipants;
-        this.propToDiscProp = propToDiscProp;
+        this.iatToDiscourse = iatToDiscourse;
     }
 
     public DiscourseModel(List<IATmap> annotatedDebate) {
@@ -115,7 +115,6 @@ public class DiscourseModel {
 
                             discoursePropositions.add(dp);
 
-                            System.out.println("Generated proposition " + dp.getPid() + ": " + dp.getText());
 
                             //Direct moves (i.e. directly anchored to the locution; aside from assertion)
                             List<Node> conventionalImplicatures = Edge.findRelatedDaugtherContentNode(l, map.getNodes(),
@@ -149,15 +148,19 @@ public class DiscourseModel {
                             //Indirect moves (i.e. via transition)
                             List<Node> motherNodes = Edge.findMother(l, map.getEdges(), "Default Transition");
 
-                            agreeMove(motherNodes, map, dp);
 
-                            disagreeMove(motherNodes, map, dp);
+                            try {
+                                agreeMove(motherNodes, map, dp);
 
-                            argueMove(motherNodes, map, dp);
+                                disagreeMove(motherNodes, map, dp);
 
-                            restateMove(motherNodes, map, dp);
+                                argueMove(motherNodes, map, dp);
 
-
+                                restateMove(motherNodes, map, dp);
+                            } catch (Exception e) {
+                                System.out.println("Failed to process proposition move " + dp.getPid() + ": " + dp.getText());
+                                e.printStackTrace();
+                            }
                         }
 
 
@@ -166,19 +169,33 @@ public class DiscourseModel {
                 //Agree moves independent of assertion
                 else {
                     try {
-                        DiscourseProposition empty = initializeDP(l, discoursePropositions);
+
+                        DiscourseProposition empty = initializeDPmove(l,discoursePropositions);
 
                         List<Node> motherNodes = Edge.findMother(l, map.getEdges(), "Default Transition");
 
-                        agreeMove(motherNodes, map, empty);
 
-                        disagreeMove(motherNodes, map, empty);
+                        try {
+                             Boolean agreeSuccess = agreeMove(motherNodes, map, empty);
 
-                        discoursePropositions.add(empty);
+                            Boolean disagreeSucess = disagreeMove(motherNodes, map, empty);
+
+                            if (agreeSuccess || disagreeSucess)
+                            {
+                            discoursePropositions.add(empty);
+                            iatToDiscourse.put(empty.getAnchor(),empty);
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            System.out.println("Failed to process discourse move " + empty.getPid() + ": " + empty.getText());
+                            e.printStackTrace();
+                        }
 
 
                     } catch (Exception e) {
                         System.out.println("Failed to introduce new discourse move");
+                        e.printStackTrace();
                     }
 
                 }
@@ -367,7 +384,7 @@ public class DiscourseModel {
     public DiscourseProposition initializeDP(Node daugtherNode, Locution l, LinkedList<DiscourseProposition> intermediatePropositionList) {
         String pid = (String) VariableHandler.returnNewVar(VariableHandler.variableType.PROPOSITION);
       //  float[] embedding = calculateEmbeddings(daugtherNode.getText());
-        DiscourseProposition dp = new DiscourseProposition(pid, daugtherNode.getText());
+        DiscourseProposition dp = new DiscourseProposition(pid,daugtherNode.getJsonID(),daugtherNode.getText());
         dpReference.put(pid, dp);
 
         Speaker s = isParticipant(l.getSpeaker(), discourseParticipants);
@@ -409,22 +426,26 @@ public class DiscourseModel {
         dp.getRelevance().put(pid, 1.0);
 
         try {
-            propToDiscProp.put((Proposition) daugtherNode, dp);
+            iatToDiscourse.put(daugtherNode.getJsonID(), dp);
         } catch (Exception e) {
             System.out.println("Failed to align propositions with discourse model");
         }
+
+        System.out.println("Generated dp " + dp.getPid() + ": " + dp.getText());
 
         return dp;
     }
 
 
-    public DiscourseProposition initializeDP(Locution l, LinkedList<DiscourseProposition> intermediatePropositionList) {
+
+
+    public DiscourseProposition initializeDPmove(Locution l, LinkedList<DiscourseProposition> intermediatePropositionList) {
         String pid = (String) VariableHandler.returnNewVar(VariableHandler.variableType.PROPOSITION);
 
         //Calculate embeddings
       //  float[] embedding = calculateEmbeddings(l.getText());
 
-        DiscourseProposition dp = new DiscourseProposition(pid, "discourse_move(" + l.getText() + ")");
+        DiscourseProposition dp = new DiscourseProposition(pid, l.getJsonID(), "discourse_move(" + l.getText() + ")");
         dpReference.put(pid, dp);
         Speaker s = isParticipant(l.getSpeaker(), discourseParticipants);
         if (s == null) {
@@ -475,6 +496,7 @@ public class DiscourseModel {
         //Set relevance
         dp.getRelevance().put(pid, 1.0);
 
+        System.out.println("Generated dp move " + dp.getPid() + ": " + dp.getText());
 
         return dp;
     }
@@ -574,8 +596,10 @@ public class DiscourseModel {
     }
 
 
-    public void agreeMove(List<Node> transitionNodes, IATmap map, DiscourseProposition dp) {
+    public Boolean agreeMove(List<Node> transitionNodes, IATmap map, DiscourseProposition dp) {
         //Indirect moves (i.e. via transition)
+
+        Boolean success = false;
 
         for (Node transition : transitionNodes) {
 
@@ -586,10 +610,19 @@ public class DiscourseModel {
 
                 for (Node p : agreePropositions) {
                     if (p instanceof Proposition) {
-                        dp.getBeliefHolder().get(propToDiscProp.get(p).getPid()).add(dp.getOriginalSpeaker());
 
-                        //Make relevant again if it is used in IAT argumentation scheme
-                        dp.getRelevance().replace(propToDiscProp.get(p).getPid(), 1.0);
+                        try {
+                            String relatedDpId = iatToDiscourse.get(p.getJsonID()).getPid();
+
+                            dp.getBeliefHolder().get(relatedDpId).add(dp.getOriginalSpeaker());
+
+                            //Make relevant again if it is used in IAT argumentation scheme
+                            dp.getRelevance().replace(relatedDpId, 1.0);
+                            success = true;
+                        } catch(Exception e)
+                        {
+                            success = false;
+                        }
 
                         //do we want to avoid inconsistency (i.e. contradicting beliefs?)
                         //No, but comment this in if so
@@ -602,9 +635,13 @@ public class DiscourseModel {
                 }
             }
         }
+        return success;
     }
 
-    public void disagreeMove(List<Node> transitionNodes, IATmap map, DiscourseProposition dp) {
+    public Boolean disagreeMove(List<Node> transitionNodes, IATmap map, DiscourseProposition dp) {
+
+
+        Boolean success = false;
 
         for (Node transition : transitionNodes) {
 
@@ -625,7 +662,7 @@ public class DiscourseModel {
 
                     for (Node q : conflictDaugther) {
                         if (q instanceof Proposition) {
-                            if (propToDiscProp.keySet().contains(q)) {
+                            if (iatToDiscourse.containsKey(q.getJsonID())) {
 
                                 //TODO
                                 //Comment in to retract commitment if it is in conflict with previous agreement
@@ -635,12 +672,14 @@ public class DiscourseModel {
                                 } else {
 
                                  */
-                                    dp.getDeniesBelief().get(propToDiscProp.get((q)).getPid()).add(dp.getOriginalSpeaker());
+                                String relatedDpId = iatToDiscourse.get(q.getJsonID()).getPid();
+
+                                    dp.getDeniesBelief().get(relatedDpId).add(dp.getOriginalSpeaker());
                               //  }
 
                                 //Make relevant again if it is used in IAT argumentation scheme
-                                dp.getRelevance().replace(propToDiscProp.get(q).getPid(), 1.0);
-
+                                dp.getRelevance().replace(relatedDpId, 1.0);
+                                success = true;
                             } else {
                                 System.out.println("Proposition " + p + "has no corresponding element in the discourse model.");
                                 System.out.println("Proposition has not been introduced via a locution.");
@@ -651,6 +690,7 @@ public class DiscourseModel {
                 }
             }
         }
+        return success;
     }
 
     //TODO Do the same thing for mother nodes
@@ -668,17 +708,19 @@ public class DiscourseModel {
                         if (q instanceof Proposition) {
 
                             //Basically only apply this to propositions that have already been uttered at this point
-                            if (propToDiscProp.keySet().contains(q)) {
+                            if (iatToDiscourse.containsKey(q.getJsonID())) {
                                 //If the premise of the argue move is a denial of self or a belief of some other party
 
-                                if (!dp.getOriginalSpeaker().equals(propToDiscProp.get(q).getOriginalSpeaker()) ||
-                                        !dp.getBeliefHolder().get(propToDiscProp.get(q).getPid()).contains(dp.getOriginalSpeaker())) {
-                                    dp.getBeliefHolder().get(propToDiscProp.get((q)).getPid()).add(dp.getOriginalSpeaker());
+                              DiscourseProposition relatedDp =  iatToDiscourse.get(q.getJsonID());
+
+                                if (!dp.getOriginalSpeaker().equals(relatedDp.getOriginalSpeaker()) ||
+                                        !dp.getBeliefHolder().get(relatedDp.getPid()).contains(dp.getOriginalSpeaker())) {
+                                    dp.getBeliefHolder().get(relatedDp.getPid()).add(dp.getOriginalSpeaker());
                                 }
 
 
                                 //Make relevant again if it is used in IAT argumentation scheme
-                                dp.getRelevance().replace(propToDiscProp.get(q).getPid(), 1.0);
+                                dp.getRelevance().replace(relatedDp.getPid(), 1.0);
 
 
                             }
@@ -707,17 +749,19 @@ public class DiscourseModel {
                     for (Node q : arguePropositions) {
                         if (q instanceof Proposition) {
                             //Basically only apply this to propositions that have already been uttered at this point
-                            if (propToDiscProp.keySet().contains(q))
+                            if (iatToDiscourse.keySet().contains(q.getJsonID()))
                                 {
                                 //If the premise of the argue move is a denial of self or a belief of some other party
 
-                                if (!dp.getOriginalSpeaker().equals(propToDiscProp.get(q).getOriginalSpeaker()) &&
-                                        !dp.getBeliefHolder().get(propToDiscProp.get(q).getPid()).contains(dp.getOriginalSpeaker())) {
-                                    dp.getBeliefHolder().get(propToDiscProp.get((q)).getPid()).add(dp.getOriginalSpeaker());
+                                    DiscourseProposition relatedDp = iatToDiscourse.get(q.getJsonID());
+
+                                if (!dp.getOriginalSpeaker().equals(relatedDp.getOriginalSpeaker()) &&
+                                        !dp.getBeliefHolder().get(relatedDp.getPid()).contains(dp.getOriginalSpeaker())) {
+                                    dp.getBeliefHolder().get(relatedDp.getPid()).add(dp.getOriginalSpeaker());
                                 }
 
                             //Make relevant again if it is used in IAT argumentation scheme
-                            dp.getRelevance().replace(propToDiscProp.get(q).getPid(), 1.0);
+                            dp.getRelevance().replace(relatedDp.getPid(), 1.0);
 
 
                         }
@@ -961,12 +1005,12 @@ public class DiscourseModel {
         this.discourseParticipants = discourseParticipants;
     }
 
-    public HashMap<Proposition, DiscourseProposition> getPropToDiscProp() {
-        return propToDiscProp;
+    public HashMap<Integer, DiscourseProposition> getIatToDiscourse() {
+        return iatToDiscourse;
     }
 
-    public void setPropToDiscProp(HashMap<Proposition, DiscourseProposition> propToDiscProp) {
-        this.propToDiscProp = propToDiscProp;
+    public void setIatToDiscourse(HashMap<Integer, DiscourseProposition> iatToDiscourse) {
+        this.iatToDiscourse = iatToDiscourse;
     }
 
 

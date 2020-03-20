@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 public class DiscourseProposition {
 
     private String pid;
+    //Relation to IAT annotation (i.e. JSON id of original proposition)
+    private Integer anchor;
     private Speaker originalSpeaker;
 
     /*TODO maybe make this one static for all DiscoursePropositions then the map doesn't have to be copied again and
@@ -51,9 +53,10 @@ public class DiscourseProposition {
         }
      */
 
-    public DiscourseProposition(String pid, String text)
+    public DiscourseProposition(String pid, Integer anchor, String text)
     {
         this.pid = pid;
+        this.anchor = anchor;
         this.text = text;
         //  this.embedding = embedding;
 
@@ -76,13 +79,14 @@ public class DiscourseProposition {
     }
      */
 
-    public DiscourseProposition(String pid, String text, Speaker originalSpeaker,
+    public DiscourseProposition(String pid, Integer anchor, String text, Speaker originalSpeaker,
                                 LinkedHashMap<String,List<Speaker>> beliefHolder,
                                 LinkedHashMap<String,List<Speaker>> deniesBelief,
                                 List<DiscourseProposition> expressiveContent)
 
     {
         this.pid = pid;
+        this.anchor = anchor;
         this.text = text;
         this.originalSpeaker = originalSpeaker;
         this.beliefHolder = beliefHolder;
@@ -105,6 +109,14 @@ public class DiscourseProposition {
 
     public void setPid(String pid) {
         this.pid = pid;
+    }
+
+    public Integer getAnchor() {
+        return anchor;
+    }
+
+    public void setAnchor(Integer anchor) {
+        this.anchor = anchor;
     }
 
     public LinkedHashMap<String,List<Speaker>> getBeliefHolder() {
@@ -191,5 +203,7 @@ public class DiscourseProposition {
     public void setNegativeCommitments(LinkedHashMap<String, List<Commitment>> negativeCommitments) {
         this.negativeCommitments = negativeCommitments;
     }
+
+
 
 }
